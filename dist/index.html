@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameTester - Headless ECS Observer 3D Demo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        overflow: hidden;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+      }
+      #hud {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 16px;
+        border-radius: 8px;
+        max-width: 380px;
+        font-size: 13px;
+        line-height: 1.5;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      }
+      #hud h1 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #38bdf8;
+        margin-bottom: 8px;
+      }
+      .badge {
+        display: inline-block;
+        background: #0284c7;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+      }
+      .controls {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #94a3b8;
+      }
+      #state-preview {
+        margin-top: 10px;
+        background: #090d16;
+        padding: 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 11px;
+        max-height: 140px;
+        overflow-y: auto;
+        color: #4ade80;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-CgtAeEm5.js"></script>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="hud">
+      <h1>GameTester ECS Observer <span class="badge">qaHook Active</span></h1>
+      <p>Headless ECS Observer PoC for LLM 3D Game QA</p>
+      <div class="controls">
+        <strong>Controls:</strong> WASD / Arrows to Move | Space to Jump
+      </div>
+      <div id="state-preview">Initializing qaHook...</div>
+    </div>
+  </body>
+</html>

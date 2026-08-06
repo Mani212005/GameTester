@@ -1,0 +1,376 @@
+
+> gametester@1.0.0 test
+> node scripts/test_runner.mjs
+
+
+==================================================
+  GameTester - Headless ECS Observer Test Runner  
+==================================================
+
+[1/4] Starting Vite dev server in background...
+[Vite] Server listening at http://localhost:3100
+[2/4] Launching Playwright Headless Chromium...
+[Playwright] Navigating to http://localhost:3100...
+[Playwright] window.qaHook detected successfully!
+
+[3/4] Running Deterministic QA Test Suite...
+
+  ✗ Test 1: Initial Scene State Serialization [FAIL]: entityCount=5, hasPlayer=true, hasFloor=true, isGrounded=false
+  ✓ Test 2: Deterministic Input Injection & Movement [PASS] (4ms)
+  ✓ Test 3: Jump Impulse & Gravity Physics Simulation [PASS] (5ms)
+  ✓ Test 4: State Invariant Assertion (Fall Detection) [PASS] (4ms)
+  ✓ Test 5: Real-time Physics Collision Observer [PASS] (456ms)
+
+==================================================
+            DIAGNOSTIC TEST REPORT                
+==================================================
+{
+  "summary": {
+    "status": "FAIL",
+    "totalTests": 5,
+    "passed": 4,
+    "failed": 1,
+    "totalDurationMs": 1214
+  },
+  "results": [
+    {
+      "name": "Test 1: Initial Scene State Serialization",
+      "passed": false,
+      "durationMs": 13,
+      "details": "Serialized 5 entities (Player, Floor, Obstacles). Player position: (0, 0.9428, 0), Grounded: false",
+      "snapshot": {
+        "playerState": {
+          "position": {
+            "x": 0,
+            "y": 0.9428,
+            "z": 0
+          },
+          "velocity": {
+            "x": 0,
+            "y": -0.9806,
+            "z": 0
+          },
+          "isGrounded": false
+        },
+        "entityNames": [
+          "FloorGround",
+          "OrangeObstacle",
+          "PurpleTower",
+          "NorthWall",
+          "PlayerCube"
+        ]
+      }
+    },
+    {
+      "name": "Test 2: Deterministic Input Injection & Movement",
+      "passed": true,
+      "durationMs": 4,
+      "details": "Player moved along Z-axis from Z=0.0000 to Z=-2.2548",
+      "snapshot": {
+        "playerState": {
+          "position": {
+            "x": 0,
+            "y": 0.4997,
+            "z": -2.2548
+          },
+          "velocity": {
+            "x": 0,
+            "y": 0.008,
+            "z": 0
+          },
+          "isGrounded": true
+        },
+        "stepCount": 10
+      }
+    },
+    {
+      "name": "Test 3: Jump Impulse & Gravity Physics Simulation",
+      "passed": true,
+      "durationMs": 5,
+      "details": "Jump launch Y-vel=6.0063, Air Y-pos=1.3085, Landed Grounded=true",
+      "snapshot": {
+        "airState": {
+          "position": {
+            "x": 0,
+            "y": 1.3085,
+            "z": 0
+          },
+          "velocity": {
+            "x": 0,
+            "y": 6.0063,
+            "z": 0
+          },
+          "isGrounded": false
+        },
+        "landedState": {
+          "position": {
+            "x": 0,
+            "y": 0.4997,
+            "z": 0
+          },
+          "velocity": {
+            "x": 0,
+            "y": 0.0085,
+            "z": 0
+          },
+          "isGrounded": true
+        }
+      }
+    },
+    {
+      "name": "Test 4: State Invariant Assertion (Fall Detection)",
+      "passed": true,
+      "durationMs": 4,
+      "details": "assertState correctly flagged invariant violation when player Y reached -10.1036",
+      "snapshot": {
+        "assertionResult": {
+          "pass": false,
+          "message": "Assertion failed: condition returned false.",
+          "state": {
+            "timestamp": 1786034248874,
+            "stepCount": 71,
+            "entities": [
+              {
+                "id": "floor_1",
+                "name": "FloorGround",
+                "type": "floor",
+                "position": {
+                  "x": 0,
+                  "y": -0.5,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "velocity": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "boundingBox": {
+                  "min": {
+                    "x": -6,
+                    "y": -1,
+                    "z": -6
+                  },
+                  "max": {
+                    "x": 6,
+                    "y": 0,
+                    "z": 6
+                  }
+                },
+                "isColliding": false,
+                "collidingWith": []
+              },
+              {
+                "id": "obs_1",
+                "name": "OrangeObstacle",
+                "type": "obstacle",
+                "position": {
+                  "x": -3,
+                  "y": 1,
+                  "z": -2
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "velocity": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "boundingBox": {
+                  "min": {
+                    "x": -4,
+                    "y": 0,
+                    "z": -3
+                  },
+                  "max": {
+                    "x": -2,
+                    "y": 2,
+                    "z": -1
+                  }
+                },
+                "isColliding": false,
+                "collidingWith": []
+              },
+              {
+                "id": "obs_2",
+                "name": "PurpleTower",
+                "type": "obstacle",
+                "position": {
+                  "x": 3,
+                  "y": 1.5,
+                  "z": -1
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "velocity": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "boundingBox": {
+                  "min": {
+                    "x": 2.25,
+                    "y": 0,
+                    "z": -1.75
+                  },
+                  "max": {
+                    "x": 3.75,
+                    "y": 3,
+                    "z": -0.25
+                  }
+                },
+                "isColliding": false,
+                "collidingWith": []
+              },
+              {
+                "id": "wall_north",
+                "name": "NorthWall",
+                "type": "wall",
+                "position": {
+                  "x": 0,
+                  "y": 1.5,
+                  "z": -6
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "velocity": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "boundingBox": {
+                  "min": {
+                    "x": -6,
+                    "y": 0,
+                    "z": -6.25
+                  },
+                  "max": {
+                    "x": 6,
+                    "y": 3,
+                    "z": -5.75
+                  }
+                },
+                "isColliding": false,
+                "collidingWith": []
+              },
+              {
+                "id": "player_1",
+                "name": "PlayerCube",
+                "type": "player",
+                "position": {
+                  "x": 15.4965,
+                  "y": -10.1036,
+                  "z": 0
+                },
+                "rotation": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0,
+                  "w": 1
+                },
+                "velocity": {
+                  "x": 0,
+                  "y": -14.6059,
+                  "z": 0
+                },
+                "boundingBox": {
+                  "min": {
+                    "x": 14.9965,
+                    "y": -10.6036,
+                    "z": -0.5
+                  },
+                  "max": {
+                    "x": 15.9965,
+                    "y": -9.6036,
+                    "z": 0.5
+                  }
+                },
+                "isColliding": false,
+                "collidingWith": []
+              }
+            ],
+            "playerState": {
+              "position": {
+                "x": 15.4965,
+                "y": -10.1036,
+                "z": 0
+              },
+              "velocity": {
+                "x": 0,
+                "y": -14.6059,
+                "z": 0
+              },
+              "isGrounded": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Test 5: Real-time Physics Collision Observer",
+      "passed": true,
+      "durationMs": 456,
+      "details": "Collision status: isColliding=true, collidingWith=[OrangeObstacle]",
+      "snapshot": {
+        "playerEntity": {
+          "id": "player_1",
+          "name": "PlayerCube",
+          "type": "player",
+          "position": {
+            "x": -1.5404,
+            "y": 0.9623,
+            "z": -2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "velocity": {
+            "x": 0,
+            "y": -0.001,
+            "z": 0
+          },
+          "boundingBox": {
+            "min": {
+              "x": -2.0404,
+              "y": 0.4623,
+              "z": -2.5
+            },
+            "max": {
+              "x": -1.0404,
+              "y": 1.4623,
+              "z": -1.5
+            }
+          },
+          "isColliding": true,
+          "collidingWith": [
+            "OrangeObstacle"
+          ]
+        }
+      }
+    }
+  ]
+}
+==================================================
+
+Summary: total=5, passed=4, failed=1
+Tests failed (failedCount=1, total=5). Exiting with code 1.
