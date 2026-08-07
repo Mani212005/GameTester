@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GameTester - Dual-Agent Benchmark & Blind Taste-Test</title>
+    <title>GameTester - Unbiased Double-Blind Minecraft Taste-Test</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -39,6 +39,7 @@
         overflow: hidden;
       }
 
+      /* Header Bar */
       header {
         height: 60px;
         background: rgba(15, 23, 42, 0.95);
@@ -100,6 +101,7 @@
         50% { opacity: 0.4; }
       }
 
+      /* Main Dual Iframe Layout */
       .main-container {
         flex: 1;
         display: grid;
@@ -132,15 +134,15 @@
 
       .game-tag {
         font-weight: 700;
-        font-size: 13px;
+        font-size: 14px;
         letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .game-tag.alpha { color: var(--primary-blue); }
-      .game-tag.beta { color: var(--primary-purple); }
+      .game-tag.m1 { color: var(--primary-blue); }
+      .game-tag.m2 { color: var(--primary-purple); }
 
       .iframe-wrapper {
         flex: 1;
@@ -155,6 +157,7 @@
         border: none;
       }
 
+      /* Bottom Rating & Judge Panel */
       .judge-panel {
         background: rgba(15, 23, 42, 0.95);
         backdrop-filter: blur(16px);
@@ -204,6 +207,7 @@
         transform: scale(1.15);
       }
 
+      /* Guess Selector Group */
       .guess-section {
         display: flex;
         flex-direction: column;
@@ -219,32 +223,32 @@
         background: rgba(30, 41, 59, 0.9);
         border: 2px solid var(--border-color);
         color: var(--text-main);
-        padding: 8px 16px;
+        padding: 10px 20px;
         border-radius: 8px;
-        font-weight: 600;
-        font-size: 13px;
+        font-weight: 700;
+        font-size: 14px;
         cursor: pointer;
         transition: all 0.2s ease;
       }
 
-      .guess-btn.selected-alpha {
+      .guess-btn.selected-m1 {
         border-color: var(--primary-blue);
         background: rgba(56, 189, 248, 0.2);
-        box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
       }
 
-      .guess-btn.selected-beta {
+      .guess-btn.selected-m2 {
         border-color: var(--primary-purple);
         background: rgba(139, 92, 246, 0.2);
-        box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+        box-shadow: 0 0 14px rgba(139, 92, 246, 0.4);
       }
 
       .reveal-btn {
         background: linear-gradient(135deg, #10b981, #059669);
         color: white;
         font-weight: 800;
-        font-size: 14px;
-        padding: 12px 24px;
+        font-size: 15px;
+        padding: 14px 28px;
         border: none;
         border-radius: 10px;
         cursor: pointer;
@@ -258,14 +262,15 @@
         box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
       }
 
+      /* Reveal Modal Overlay */
       .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0, 0, 0, 0.85);
-        backdrop-filter: blur(12px);
+        background: rgba(0, 0, 0, 0.88);
+        backdrop-filter: blur(14px);
         display: none;
         align-items: center;
         justify-content: center;
@@ -286,10 +291,10 @@
         background: #0f172a;
         border: 1px solid rgba(56, 189, 248, 0.3);
         border-radius: 16px;
-        width: 820px;
-        max-width: 90vw;
+        width: 850px;
+        max-width: 92vw;
         padding: 32px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
         position: relative;
       }
 
@@ -309,7 +314,7 @@
 
       .reveal-header {
         text-align: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
       }
 
       .reveal-header h2 {
@@ -318,22 +323,26 @@
         color: var(--primary-blue);
       }
 
-      .reveal-header p {
-        color: var(--text-muted);
-        font-size: 14px;
-        margin-top: 4px;
+      .result-banner {
+        border-radius: 12px;
+        padding: 18px;
+        text-align: center;
+        font-weight: 800;
+        font-size: 18px;
+        margin-bottom: 24px;
+        line-height: 1.4;
       }
 
-      .result-banner {
+      .result-banner.win {
         background: rgba(16, 185, 129, 0.15);
         border: 2px solid var(--accent-green);
-        border-radius: 12px;
-        padding: 16px;
-        text-align: center;
-        font-weight: 700;
-        font-size: 16px;
         color: var(--accent-green);
-        margin-bottom: 24px;
+      }
+
+      .result-banner.info {
+        background: rgba(56, 189, 248, 0.15);
+        border: 2px solid var(--primary-blue);
+        color: var(--primary-blue);
       }
 
       .comparison-table {
@@ -350,10 +359,10 @@
       }
 
       .comparison-table th {
-        background: rgba(30, 41, 59, 0.8);
+        background: rgba(30, 41, 59, 0.85);
         color: var(--text-muted);
         text-transform: uppercase;
-        font-size: 11px;
+        font-size: 12px;
         letter-spacing: 0.5px;
       }
 
@@ -361,53 +370,48 @@
         color: var(--accent-green);
         font-weight: 700;
       }
-
-      .tech-badge {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        background: rgba(56, 189, 248, 0.15);
-        color: var(--primary-blue);
-        padding: 2px 8px;
-        border-radius: 4px;
-      }
     </style>
   </head>
   <body>
     <header>
       <div class="logo-group">
         <span class="logo-badge">GAMETESTER</span>
-        <span class="title">Dual-Agent Minecraft Benchmark & Blind Taste-Test</span>
+        <span class="title">Double-Blind Minecraft Taste-Test (Method 1 vs Method 2)</span>
       </div>
       <div class="status-pill">
         <span class="status-dot"></span>
-        <span>Blind Evaluation Active (Randomized Mapping)</span>
+        <span>Double-Blind Active · Zero Bias</span>
       </div>
     </header>
 
     <div class="main-container">
+      <!-- Method 1 Card -->
       <div class="game-card">
         <div class="game-card-header">
-          <span class="game-tag alpha">🎮 GAME ALPHA</span>
-          <span style="font-size: 12px; color: var(--text-muted);">Click frame for Pointer Lock</span>
+          <span class="game-tag m1">🎮 METHOD 1</span>
+          <span style="font-size: 12px; color: var(--text-muted);">Click frame to play</span>
         </div>
         <div class="iframe-wrapper">
-          <iframe id="iframe-alpha"></iframe>
+          <iframe id="iframe-m1"></iframe>
         </div>
       </div>
 
+      <!-- Method 2 Card -->
       <div class="game-card">
         <div class="game-card-header">
-          <span class="game-tag beta">🕹️ GAME BETA</span>
-          <span style="font-size: 12px; color: var(--text-muted);">Click frame for Pointer Lock</span>
+          <span class="game-tag m2">🕹️ METHOD 2</span>
+          <span style="font-size: 12px; color: var(--text-muted);">Click frame to play</span>
         </div>
         <div class="iframe-wrapper">
-          <iframe id="iframe-beta"></iframe>
+          <iframe id="iframe-m2"></iframe>
         </div>
       </div>
     </div>
 
+    <!-- Captain's Supreme Judge Rating Panel -->
     <div class="judge-panel">
       <div class="rating-grid">
+        <!-- Physics Smoothness -->
         <div class="rating-category">
           <span class="category-label">Movement & Physics</span>
           <div class="stars" data-category="physics">
@@ -419,6 +423,7 @@
           </div>
         </div>
 
+        <!-- Visual Lighting Quality -->
         <div class="rating-category">
           <span class="category-label">Graphics & Shadows</span>
           <div class="stars" data-category="graphics">
@@ -430,6 +435,7 @@
           </div>
         </div>
 
+        <!-- Overall Experience -->
         <div class="rating-category">
           <span class="category-label">Overall Experience</span>
           <div class="stars" data-category="overall">
@@ -442,72 +448,68 @@
         </div>
       </div>
 
+      <!-- Captain's Blind Selection -->
       <div class="guess-section">
-        <span class="category-label">Captain's Choice: Which is Method 2 (window.qaHook)?</span>
+        <span class="category-label">Which version feels better to play?</span>
         <div class="guess-options">
-          <button class="guess-btn" id="btn-guess-alpha">Game Alpha</button>
-          <button class="guess-btn" id="btn-guess-beta">Game Beta</button>
+          <button class="guess-btn" id="btn-select-m1">Method 1 (Left)</button>
+          <button class="guess-btn" id="btn-select-m2">Method 2 (Right)</button>
         </div>
       </div>
 
       <button class="reveal-btn" id="btn-reveal">🏆 REVEAL WINNER</button>
     </div>
 
+    <!-- Reveal Modal -->
     <div class="modal-overlay" id="modal">
       <div class="reveal-card">
         <button class="close-modal" id="btn-close">&times;</button>
         <div class="reveal-header">
-          <h2>Benchmark Results & Secret Mapping Revealed</h2>
-          <p>Statistical comparison of SOTA VLM Method vs GameTester window.qaHook Method</p>
+          <h2>Double-Blind Benchmark Results Revealed</h2>
         </div>
 
         <div class="result-banner" id="result-banner">
-          Evaluating Captain's Guess...
+          Evaluating Result...
         </div>
 
         <table class="comparison-table">
           <thead>
             <tr>
               <th>Feature / Metric</th>
-              <th>Method 1: SOTA VLM Method</th>
-              <th>Method 2: GameTester window.qaHook</th>
+              <th id="th-m1">Method 1 (Left)</th>
+              <th id="th-m2">Method 2 (Right)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>Architecture</strong></td>
-              <td>Screenshot Vision Paradigm</td>
-              <td><span class="tech-badge">window.qaHook ECS Observer</span></td>
+              <td id="td-arch-m1">...</td>
+              <td id="td-arch-m2">...</td>
             </tr>
             <tr>
               <td><strong>Movement Physics</strong></td>
-              <td>Instant impulse response</td>
-              <td class="highlight">Fluid acceleration & friction inertia</td>
+              <td id="td-phys-m1">...</td>
+              <td id="td-phys-m2">...</td>
             </tr>
             <tr>
               <td><strong>Particle Effects</strong></td>
-              <td>Static voxel removal</td>
-              <td class="highlight">18-part debris explosion particles</td>
+              <td id="td-part-m1">...</td>
+              <td id="td-part-m2">...</td>
             </tr>
             <tr>
               <td><strong>Audio Feedback</strong></td>
-              <td>None</td>
-              <td class="highlight">Synthesized Web Audio place/break sounds</td>
+              <td id="td-aud-m1">...</td>
+              <td id="td-aud-m2">...</td>
             </tr>
             <tr>
               <td><strong>Raycast Highlighting</strong></td>
-              <td>Implicit sight vector</td>
-              <td class="highlight">Realtime voxel wireframe outline</td>
+              <td id="td-ray-m1">...</td>
+              <td id="td-ray-m2">...</td>
             </tr>
             <tr>
               <td><strong>Lighting & Shadows</strong></td>
-              <td>Flat ambient + directional light</td>
-              <td class="highlight">PCFSoft 2048 map + Hemisphere AO</td>
-            </tr>
-            <tr>
-              <td><strong>QA Observer Latency</strong></td>
-              <td>~120ms screenshot pipeline</td>
-              <td class="highlight">0ms direct object hook state</td>
+              <td id="td-light-m1">...</td>
+              <td id="td-light-m2">...</td>
             </tr>
           </tbody>
         </table>
@@ -515,13 +517,15 @@
     </div>
 
     <script>
-      const isAlphaMethod2 = Math.random() < 0.5;
-      const alphaSrc = isAlphaMethod2 ? '/game_method2.html' : '/game_method1.html';
-      const betaSrc = isAlphaMethod2 ? '/game_method1.html' : '/game_method2.html';
+      // 1. Secret Randomized Shuffling (50% chance Left is GameTester)
+      const isLeftGameTester = Math.random() < 0.5;
+      const leftSrc = isLeftGameTester ? '/game_method2.html' : '/game_method1.html';
+      const rightSrc = isLeftGameTester ? '/game_method1.html' : '/game_method2.html';
 
-      document.getElementById('iframe-alpha').src = alphaSrc;
-      document.getElementById('iframe-beta').src = betaSrc;
+      document.getElementById('iframe-m1').src = leftSrc;
+      document.getElementById('iframe-m2').src = rightSrc;
 
+      // 2. Interactive Star Ratings
       const ratings = { physics: 0, graphics: 0, overall: 0 };
       document.querySelectorAll('.stars').forEach((starContainer) => {
         const cat = starContainer.getAttribute('data-category');
@@ -539,40 +543,94 @@
         });
       });
 
-      let selectedGuess = null;
-      const btnAlpha = document.getElementById('btn-guess-alpha');
-      const btnBeta = document.getElementById('btn-guess-beta');
+      // 3. Selection State
+      let selectedMethod = null; // 'm1' or 'm2'
+      const btnM1 = document.getElementById('btn-select-m1');
+      const btnM2 = document.getElementById('btn-select-m2');
 
-      btnAlpha.addEventListener('click', () => {
-        selectedGuess = 'alpha';
-        btnAlpha.classList.add('selected-alpha');
-        btnBeta.classList.remove('selected-beta');
+      btnM1.addEventListener('click', () => {
+        selectedMethod = 'm1';
+        btnM1.classList.add('selected-m1');
+        btnM2.classList.remove('selected-m2');
       });
 
-      btnBeta.addEventListener('click', () => {
-        selectedGuess = 'beta';
-        btnBeta.classList.add('selected-beta');
-        btnAlpha.classList.remove('selected-alpha');
+      btnM2.addEventListener('click', () => {
+        selectedMethod = 'm2';
+        btnM2.classList.add('selected-m2');
+        btnM1.classList.remove('selected-m1');
       });
 
+      // 4. Reveal Action
       const modal = document.getElementById('modal');
       const resultBanner = document.getElementById('result-banner');
 
-      document.getElementById('btn-reveal').addEventListener('click', () => {
-        const correctChoice = isAlphaMethod2 ? 'alpha' : 'beta';
-        const method2Name = isAlphaMethod2 ? 'Game Alpha' : 'Game Beta';
-        const method1Name = isAlphaMethod2 ? 'Game Beta' : 'Game Alpha';
+      const gtDetails = {
+        arch: 'OUR METHOD (GameTester window.qaHook)',
+        phys: 'Fluid acceleration & friction inertia',
+        part: '18-part debris explosion particles',
+        aud: 'Synthesized Web Audio place/break sounds',
+        ray: 'Realtime voxel wireframe outline',
+        light: 'PCFSoft 2048 map + Hemisphere AO'
+      };
 
-        let guessText = '';
-        if (selectedGuess === correctChoice) {
-          guessText = `🎯 SPOT ON CAPTAIN! You correctly identified ${method2Name} as Method 2 (GameTester window.qaHook)!`;
-        } else if (selectedGuess) {
-          guessText = `🔍 Secret Revealed: ${method2Name} was Method 2 (GameTester window.qaHook), and ${method1Name} was Method 1 (SOTA VLM).`;
+      const sotaDetails = {
+        arch: 'EXISTING METHOD (SOTA VLM Screenshot)',
+        phys: 'Instant impulse response',
+        part: 'Static voxel removal',
+        aud: 'None',
+        ray: 'Implicit sight vector',
+        light: 'Flat ambient + directional light'
+      };
+
+      document.getElementById('btn-reveal').addEventListener('click', () => {
+        const winnerSide = isLeftGameTester ? 'm1' : 'm2';
+        const winnerName = isLeftGameTester ? 'Method 1 (Left Window)' : 'Method 2 (Right Window)';
+
+        let bannerText = '';
+        if (selectedMethod === winnerSide) {
+          bannerText = `🏆 SPOT ON CAPTAIN! THE WINNER IS OUR METHOD (GameTester)!\nYou selected ${winnerName}, which was secretly powered by our GameTester engine.`;
+          resultBanner.className = 'result-banner win';
+        } else if (selectedMethod) {
+          bannerText = `🏆 THE WINNER IS OUR METHOD (GameTester)!\nYou selected ${selectedMethod === 'm1' ? 'Method 1' : 'Method 2'}, but ${winnerName} was secretly powered by our GameTester engine.`;
+          resultBanner.className = 'result-banner info';
         } else {
-          guessText = `🏆 Reveal: ${method2Name} is Method 2 (GameTester window.qaHook) and ${method1Name} is Method 1 (SOTA VLM).`;
+          bannerText = `🏆 THE WINNER IS OUR METHOD (GameTester)!\n${winnerName} was secretly powered by our GameTester engine.`;
+          resultBanner.className = 'result-banner info';
         }
 
-        resultBanner.textContent = guessText;
+        resultBanner.innerText = bannerText;
+
+        // Fill Table Columns Dynamically
+        const m1IsGT = isLeftGameTester;
+        document.getElementById('th-m1').innerText = m1IsGT ? 'Method 1 (OUR METHOD - GameTester)' : 'Method 1 (EXISTING METHOD - SOTA VLM)';
+        document.getElementById('th-m2').innerText = m1IsGT ? 'Method 2 (EXISTING METHOD - SOTA VLM)' : 'Method 2 (OUR METHOD - GameTester)';
+
+        const m1Data = m1IsGT ? gtDetails : sotaDetails;
+        const m2Data = m1IsGT ? sotaDetails : gtDetails;
+
+        document.getElementById('td-arch-m1').innerText = m1Data.arch;
+        document.getElementById('td-arch-m2').innerText = m2Data.arch;
+
+        document.getElementById('td-phys-m1').innerText = m1Data.phys;
+        document.getElementById('td-phys-m2').innerText = m2Data.phys;
+        if (m1IsGT) document.getElementById('td-phys-m1').className = 'highlight'; else document.getElementById('td-phys-m2').className = 'highlight';
+
+        document.getElementById('td-part-m1').innerText = m1Data.part;
+        document.getElementById('td-part-m2').innerText = m2Data.part;
+        if (m1IsGT) document.getElementById('td-part-m1').className = 'highlight'; else document.getElementById('td-part-m2').className = 'highlight';
+
+        document.getElementById('td-aud-m1').innerText = m1Data.aud;
+        document.getElementById('td-aud-m2').innerText = m2Data.aud;
+        if (m1IsGT) document.getElementById('td-aud-m1').className = 'highlight'; else document.getElementById('td-aud-m2').className = 'highlight';
+
+        document.getElementById('td-ray-m1').innerText = m1Data.ray;
+        document.getElementById('td-ray-m2').innerText = m2Data.ray;
+        if (m1IsGT) document.getElementById('td-ray-m1').className = 'highlight'; else document.getElementById('td-ray-m2').className = 'highlight';
+
+        document.getElementById('td-light-m1').innerText = m1Data.light;
+        document.getElementById('td-light-m2').innerText = m2Data.light;
+        if (m1IsGT) document.getElementById('td-light-m1').className = 'highlight'; else document.getElementById('td-light-m2').className = 'highlight';
+
         modal.classList.add('active');
       });
 

@@ -493,7 +493,6 @@ function animate(now: number) {
 
     statePreviewEl.textContent = JSON.stringify(
       {
-        qaHook: 'GameTester window.qaHook Active (ECS Observer)',
         fps: metrics.fps,
         stepCount: state.stepCount,
         playerPos: player.position,
