@@ -38,8 +38,8 @@ async function runTestSuite() {
   page.on('pageerror', (err) => console.log(`[Browser Unhandled Error] ${err.stack || err.message}`));
 
   try {
-    console.log(`[Playwright] Navigating to ${serverUrl}...`);
-    await page.goto(serverUrl, { waitUntil: 'load' });
+    console.log(`[Playwright] Navigating to ${serverUrl}/public/game_method2.html...`);
+    await page.goto(`${serverUrl}/public/game_method2.html`, { waitUntil: 'load' });
 
     // Wait for qaHook initialization
     await page.waitForFunction(() => typeof window.qaHook !== 'undefined', { timeout: 15000 });
