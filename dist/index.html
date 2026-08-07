@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GameTester - Unbiased Double-Blind Minecraft Taste-Test</title>
+    <title>GameTester - Unbiased Multi-Game Benchmark Suite</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -55,7 +55,7 @@
       .logo-group {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 16px;
       }
 
       .logo-badge {
@@ -68,10 +68,29 @@
         box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
       }
 
-      .title {
-        font-size: 16px;
-        font-weight: 700;
+      .game-selector-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .game-select-dropdown {
+        background: rgba(30, 41, 59, 0.9);
+        border: 1px solid var(--primary-blue);
         color: var(--text-main);
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        outline: none;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        transition: all 0.2s ease;
+      }
+
+      .game-select-dropdown:hover {
+        background: rgba(56, 189, 248, 0.15);
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
       }
 
       .status-pill {
@@ -376,7 +395,13 @@
     <header>
       <div class="logo-group">
         <span class="logo-badge">GAMETESTER</span>
-        <span class="title">Double-Blind Minecraft Taste-Test (Method 1 vs Method 2)</span>
+        <div class="game-selector-container">
+          <select id="game-selector" class="game-select-dropdown">
+            <option value="minecraft">🌲 3D Minecraft Voxel Sandbox</option>
+            <option value="fps">🎯 3D Tactical Action FPS</option>
+            <option value="lotr">🧙‍♂️ 3D Shire LOTR Environment</option>
+          </select>
+        </div>
       </div>
       <div class="status-pill">
         <span class="status-dot"></span>
@@ -465,7 +490,7 @@
       <div class="reveal-card">
         <button class="close-modal" id="btn-close">&times;</button>
         <div class="reveal-header">
-          <h2>Double-Blind Benchmark Results Revealed</h2>
+          <h2 id="modal-title">Double-Blind Benchmark Results Revealed</h2>
         </div>
 
         <div class="result-banner" id="result-banner">
@@ -480,52 +505,110 @@
               <th id="th-m2">Method 2 (Right)</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td><strong>Architecture</strong></td>
-              <td id="td-arch-m1">...</td>
-              <td id="td-arch-m2">...</td>
-            </tr>
-            <tr>
-              <td><strong>Movement Physics</strong></td>
-              <td id="td-phys-m1">...</td>
-              <td id="td-phys-m2">...</td>
-            </tr>
-            <tr>
-              <td><strong>Particle Effects</strong></td>
-              <td id="td-part-m1">...</td>
-              <td id="td-part-m2">...</td>
-            </tr>
-            <tr>
-              <td><strong>Audio Feedback</strong></td>
-              <td id="td-aud-m1">...</td>
-              <td id="td-aud-m2">...</td>
-            </tr>
-            <tr>
-              <td><strong>Raycast Highlighting</strong></td>
-              <td id="td-ray-m1">...</td>
-              <td id="td-ray-m2">...</td>
-            </tr>
-            <tr>
-              <td><strong>Lighting & Shadows</strong></td>
-              <td id="td-light-m1">...</td>
-              <td id="td-light-m2">...</td>
-            </tr>
+          <tbody id="table-body">
           </tbody>
         </table>
       </div>
     </div>
 
     <script>
-      // 1. Secret Randomized Shuffling (50% chance Left is GameTester)
-      const isLeftGameTester = Math.random() < 0.5;
-      const leftSrc = isLeftGameTester ? '/game_method2.html' : '/game_method1.html';
-      const rightSrc = isLeftGameTester ? '/game_method1.html' : '/game_method2.html';
+      // Multi-Game Config Registry
+      const gameConfigs = {
+        minecraft: {
+          name: '3D Minecraft Voxel Sandbox',
+          m1Page: '/game_method1.html',
+          m2Page: '/game_method2.html',
+          gtDetails: {
+            arch: 'OUR METHOD (GameTester window.qaHook)',
+            phys: 'Fluid acceleration & friction inertia (Cannon-es 60FPS)',
+            part: '18-part debris explosion particles',
+            aud: 'Synthesized Web Audio place/break sounds',
+            ray: 'Realtime voxel wireframe outline',
+            light: 'PCFSoft 2048 map + Hemisphere AO'
+          },
+          sotaDetails: {
+            arch: 'EXISTING METHOD (SOTA VLM Baseline)',
+            phys: 'Instant impulse response',
+            part: 'Static voxel removal',
+            aud: 'None',
+            ray: 'Implicit sight vector',
+            light: 'Flat ambient + directional light'
+          }
+        },
+        fps: {
+          name: '3D Tactical Action FPS',
+          m1Page: '/fps_method1.html',
+          m2Page: '/fps_method2.html',
+          gtDetails: {
+            arch: 'OUR METHOD (GameTester window.qaHook)',
+            phys: 'Cannon-es 60FPS rigid body + WASD physics',
+            part: 'Web Audio gunshot + 3.5x PointLight muzzle flash & 16-spark physics',
+            aud: 'Synthesized tactical gunshot sound FX',
+            ray: 'Precision raycast hit detection & HP damage',
+            light: 'Red/Blue tactical spot lighting + shadow maps'
+          },
+          sotaDetails: {
+            arch: 'EXISTING METHOD (SOTA VLM Baseline)',
+            phys: '2D Screen-space vectoring',
+            part: 'Static frame overlay',
+            aud: 'None',
+            ray: 'Bounding box approximation',
+            light: 'Flat directional light'
+          }
+        },
+        lotr: {
+          name: '3D Shire LOTR Environment',
+          m1Page: '/lotr_method1.html',
+          m2Page: '/lotr_method2.html',
+          gtDetails: {
+            arch: 'OUR METHOD (GameTester window.qaHook)',
+            phys: 'Procedural 120-segment rolling green hills & path curve',
+            part: '9 glowing point light lanterns + 80 floating fireflies',
+            aud: 'Ambient Shire lighting atmosphere',
+            ray: 'Precision round green door & brass knob geometry',
+            light: 'Golden hour sunlight + Hemisphere grass bounce'
+          },
+          sotaDetails: {
+            arch: 'EXISTING METHOD (SOTA VLM Baseline)',
+            phys: 'Static terrain plane',
+            part: 'Unlit lantern meshes',
+            aud: 'None',
+            ray: 'Approximate 3D bounding box',
+            light: 'Flat ambient lighting'
+          }
+        }
+      };
 
-      document.getElementById('iframe-m1').src = leftSrc;
-      document.getElementById('iframe-m2').src = rightSrc;
+      let currentGame = 'minecraft';
+      let isLeftGameTester = Math.random() < 0.5;
+      let selectedMethod = null;
 
-      // 2. Interactive Star Ratings
+      const iframeM1 = document.getElementById('iframe-m1');
+      const iframeM2 = document.getElementById('iframe-m2');
+      const gameSelector = document.getElementById('game-selector');
+
+      function loadGameBenchmark(gameKey) {
+        currentGame = gameKey;
+        isLeftGameTester = Math.random() < 0.5; // Re-shuffle double-blind order
+        selectedMethod = null;
+
+        const cfg = gameConfigs[gameKey];
+        iframeM1.src = isLeftGameTester ? cfg.m2Page : cfg.m1Page;
+        iframeM2.src = isLeftGameTester ? cfg.m1Page : cfg.m2Page;
+
+        // Reset Selection state
+        btnM1.classList.remove('selected-m1');
+        btnM2.classList.remove('selected-m2');
+      }
+
+      gameSelector.addEventListener('change', (e) => {
+        loadGameBenchmark(e.target.value);
+      });
+
+      // Initial Load
+      loadGameBenchmark('minecraft');
+
+      // Ratings setup
       const ratings = { physics: 0, graphics: 0, overall: 0 };
       document.querySelectorAll('.stars').forEach((starContainer) => {
         const cat = starContainer.getAttribute('data-category');
@@ -543,8 +626,7 @@
         });
       });
 
-      // 3. Selection State
-      let selectedMethod = null; // 'm1' or 'm2'
+      // Selection State
       const btnM1 = document.getElementById('btn-select-m1');
       const btnM2 = document.getElementById('btn-select-m2');
 
@@ -560,27 +642,10 @@
         btnM1.classList.remove('selected-m1');
       });
 
-      // 4. Reveal Action
+      // Reveal Action
       const modal = document.getElementById('modal');
       const resultBanner = document.getElementById('result-banner');
-
-      const gtDetails = {
-        arch: 'OUR METHOD (GameTester window.qaHook)',
-        phys: 'Fluid acceleration & friction inertia',
-        part: '18-part debris explosion particles',
-        aud: 'Synthesized Web Audio place/break sounds',
-        ray: 'Realtime voxel wireframe outline',
-        light: 'PCFSoft 2048 map + Hemisphere AO'
-      };
-
-      const sotaDetails = {
-        arch: 'EXISTING METHOD (SOTA VLM Screenshot)',
-        phys: 'Instant impulse response',
-        part: 'Static voxel removal',
-        aud: 'None',
-        ray: 'Implicit sight vector',
-        light: 'Flat ambient + directional light'
-      };
+      const tableBody = document.getElementById('table-body');
 
       document.getElementById('btn-reveal').addEventListener('click', () => {
         const winnerSide = isLeftGameTester ? 'm1' : 'm2';
@@ -600,36 +665,46 @@
 
         resultBanner.innerText = bannerText;
 
-        // Fill Table Columns Dynamically
+        const cfg = gameConfigs[currentGame];
         const m1IsGT = isLeftGameTester;
         document.getElementById('th-m1').innerText = m1IsGT ? 'Method 1 (OUR METHOD - GameTester)' : 'Method 1 (EXISTING METHOD - SOTA VLM)';
         document.getElementById('th-m2').innerText = m1IsGT ? 'Method 2 (EXISTING METHOD - SOTA VLM)' : 'Method 2 (OUR METHOD - GameTester)';
 
-        const m1Data = m1IsGT ? gtDetails : sotaDetails;
-        const m2Data = m1IsGT ? sotaDetails : gtDetails;
+        const m1Data = m1IsGT ? cfg.gtDetails : cfg.sotaDetails;
+        const m2Data = m1IsGT ? cfg.sotaDetails : cfg.gtDetails;
 
-        document.getElementById('td-arch-m1').innerText = m1Data.arch;
-        document.getElementById('td-arch-m2').innerText = m2Data.arch;
-
-        document.getElementById('td-phys-m1').innerText = m1Data.phys;
-        document.getElementById('td-phys-m2').innerText = m2Data.phys;
-        if (m1IsGT) document.getElementById('td-phys-m1').className = 'highlight'; else document.getElementById('td-phys-m2').className = 'highlight';
-
-        document.getElementById('td-part-m1').innerText = m1Data.part;
-        document.getElementById('td-part-m2').innerText = m2Data.part;
-        if (m1IsGT) document.getElementById('td-part-m1').className = 'highlight'; else document.getElementById('td-part-m2').className = 'highlight';
-
-        document.getElementById('td-aud-m1').innerText = m1Data.aud;
-        document.getElementById('td-aud-m2').innerText = m2Data.aud;
-        if (m1IsGT) document.getElementById('td-aud-m1').className = 'highlight'; else document.getElementById('td-aud-m2').className = 'highlight';
-
-        document.getElementById('td-ray-m1').innerText = m1Data.ray;
-        document.getElementById('td-ray-m2').innerText = m2Data.ray;
-        if (m1IsGT) document.getElementById('td-ray-m1').className = 'highlight'; else document.getElementById('td-ray-m2').className = 'highlight';
-
-        document.getElementById('td-light-m1').innerText = m1Data.light;
-        document.getElementById('td-light-m2').innerText = m2Data.light;
-        if (m1IsGT) document.getElementById('td-light-m1').className = 'highlight'; else document.getElementById('td-light-m2').className = 'highlight';
+        tableBody.innerHTML = `
+          <tr>
+            <td><strong>Architecture</strong></td>
+            <td>${m1Data.arch}</td>
+            <td>${m2Data.arch}</td>
+          </tr>
+          <tr>
+            <td><strong>Movement & Physics</strong></td>
+            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.phys}</td>
+            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.phys}</td>
+          </tr>
+          <tr>
+            <td><strong>Visual & Particle FX</strong></td>
+            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.part}</td>
+            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.part}</td>
+          </tr>
+          <tr>
+            <td><strong>Audio Feedback</strong></td>
+            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.aud}</td>
+            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.aud}</td>
+          </tr>
+          <tr>
+            <td><strong>Raycast & Geometry</strong></td>
+            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.ray}</td>
+            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.ray}</td>
+          </tr>
+          <tr>
+            <td><strong>Lighting & Atmosphere</strong></td>
+            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.light}</td>
+            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.light}</td>
+          </tr>
+        `;
 
         modal.classList.add('active');
       });

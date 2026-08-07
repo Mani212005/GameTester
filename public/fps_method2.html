@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameTester - 3D Tactical Action FPS (Method 2: GameTester window.qaHook)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        overflow: hidden;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #090d16;
+        color: #f8fafc;
+        user-select: none;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        cursor: crosshair;
+      }
+      #crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 14px;
+        height: 14px;
+        pointer-events: none;
+        z-index: 10;
+      }
+      #crosshair::before,
+      #crosshair::after {
+        content: '';
+        position: absolute;
+        background: #10b981;
+        box-shadow: 0 0 4px #10b981;
+      }
+      #crosshair::before {
+        top: 6px;
+        left: 0;
+        width: 14px;
+        height: 2px;
+      }
+      #crosshair::after {
+        top: 0;
+        left: 6px;
+        width: 2px;
+        height: 14px;
+      }
+
+      #hud {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(15, 23, 42, 0.88);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 14px;
+        border-radius: 12px;
+        width: 340px;
+        font-size: 13px;
+        line-height: 1.4;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        z-index: 20;
+      }
+      #hud h1 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .badge {
+        background: #10b981;
+        color: white;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 6px;
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .stat-box {
+        background: rgba(30, 41, 59, 0.8);
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .stat-label {
+        font-size: 10px;
+        color: #94a3b8;
+        text-transform: uppercase;
+      }
+      .stat-val {
+        font-size: 14px;
+        font-weight: 800;
+        color: #f8fafc;
+      }
+      .instruction-box {
+        background: rgba(16, 185, 129, 0.15);
+        border-left: 3px solid #10b981;
+        padding: 6px 10px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-size: 11px;
+        color: #e2e8f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+
+    <div id="hud">
+      <h1>
+        3D Tactical Action FPS
+        <span class="badge">Method 2: GameTester</span>
+      </h1>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-label">AMMO</div>
+          <div class="stat-val" id="hud-ammo">30 / 120</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">SCORE</div>
+          <div class="stat-val" id="hud-score">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">WAVE</div>
+          <div class="stat-val" id="hud-wave">WAVE 1</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">ACCURACY</div>
+          <div class="stat-val" id="hud-accuracy">0%</div>
+        </div>
+      </div>
+      <div class="instruction-box">
+        <strong>🎯 Click canvas for WASD & mouse look. Left-click to shoot, R to reload.</strong>
+      </div>
+    </div>
+
+    <script type="module" src="/src/action_fps/game_method2.ts"></script>
+  </body>
+</html>

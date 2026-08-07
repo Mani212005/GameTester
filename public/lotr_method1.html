@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameTester - LOTR Shire Environment (Method 1: SOTA VLM Baseline)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        overflow: hidden;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+        user-select: none;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+      }
+      #hud {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(15, 23, 42, 0.88);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 14px;
+        border-radius: 12px;
+        width: 340px;
+        font-size: 13px;
+        line-height: 1.4;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        z-index: 20;
+      }
+      #hud h1 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #38bdf8;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .badge {
+        background: #6366f1;
+        color: white;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 6px;
+      }
+      .passage-box {
+        background: rgba(30, 41, 59, 0.9);
+        border-left: 3px solid #10b981;
+        padding: 8px 10px;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-size: 11px;
+        color: #e2e8f0;
+        font-style: italic;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+      #vlm-status {
+        margin-top: 10px;
+        background: #090d16;
+        padding: 8px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-size: 11px;
+        color: #a7f3d0;
+        white-space: pre-line;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+
+    <div id="hud">
+      <h1>
+        3D Shire LOTR Environment
+        <span class="badge">Method 1: SOTA VLM</span>
+      </h1>
+      <div class="passage-box">
+        "When Mr. Bilbo Baggins of Bag End announced that he would shortly be celebrating his eleventy-first birthday with a party of special magnificence, there was much talk and excitement in Hobbiton..."
+      </div>
+      <div id="vlm-status">Initializing VLM Visual Inspector...</div>
+    </div>
+
+    <script type="module" src="/src/lotr/game_method1.ts"></script>
+  </body>
+</html>
