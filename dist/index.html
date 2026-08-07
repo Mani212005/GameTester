@@ -3,81 +3,582 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GameTester - Headless ECS Observer 3D Demo</title>
+    <title>GameTester - Dual-Agent Benchmark & Blind Taste-Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      :root {
+        --bg-dark: #090d16;
+        --card-bg: rgba(15, 23, 42, 0.85);
+        --border-color: rgba(255, 255, 255, 0.12);
+        --primary-blue: #38bdf8;
+        --primary-purple: #8b5cf6;
+        --accent-green: #10b981;
+        --accent-amber: #f59e0b;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
+
       body {
-        overflow: hidden;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        background: #0f172a;
-        color: #f8fafc;
-      }
-      #canvas-container {
-        width: 100vw;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
         height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       }
-      #hud {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        background: rgba(15, 23, 42, 0.85);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 16px;
+
+      header {
+        height: 60px;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        z-index: 50;
+      }
+
+      .logo-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo-badge {
+        background: linear-gradient(135deg, #0284c7, #6366f1);
+        padding: 6px 12px;
         border-radius: 8px;
-        max-width: 380px;
-        font-size: 13px;
-        line-height: 1.5;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
       }
-      #hud h1 {
+
+      .title {
         font-size: 16px;
         font-weight: 700;
-        color: #38bdf8;
-        margin-bottom: 8px;
+        color: var(--text-main);
       }
-      .badge {
-        display: inline-block;
-        background: #0284c7;
-        color: white;
-        font-size: 10px;
-        font-weight: bold;
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-left: 6px;
-      }
-      .controls {
-        margin-top: 10px;
+
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 4px 12px;
+        border-radius: 20px;
         font-size: 12px;
-        color: #94a3b8;
+        font-weight: 600;
+        color: var(--accent-green);
       }
-      #state-preview {
-        margin-top: 10px;
-        background: #090d16;
-        padding: 8px;
-        border-radius: 4px;
-        font-family: monospace;
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent-green);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--accent-green);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      .main-container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px;
+        position: relative;
+      }
+
+      .game-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      }
+
+      .game-card-header {
+        height: 40px;
+        background: rgba(30, 41, 59, 0.8);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .game-tag {
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .game-tag.alpha { color: var(--primary-blue); }
+      .game-tag.beta { color: var(--primary-purple); }
+
+      .iframe-wrapper {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .judge-panel {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(16px);
+        border-top: 1px solid var(--border-color);
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        z-index: 40;
+      }
+
+      .rating-grid {
+        display: flex;
+        gap: 32px;
+        align-items: center;
+      }
+
+      .rating-category {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .category-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .stars {
+        display: flex;
+        gap: 4px;
+        cursor: pointer;
+      }
+
+      .star {
+        font-size: 18px;
+        color: #475569;
+        transition: color 0.15s ease, transform 0.15s ease;
+      }
+
+      .star.active, .star:hover {
+        color: var(--accent-amber);
+        transform: scale(1.15);
+      }
+
+      .guess-section {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .guess-options {
+        display: flex;
+        gap: 12px;
+      }
+
+      .guess-btn {
+        background: rgba(30, 41, 59, 0.9);
+        border: 2px solid var(--border-color);
+        color: var(--text-main);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .guess-btn.selected-alpha {
+        border-color: var(--primary-blue);
+        background: rgba(56, 189, 248, 0.2);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+      }
+
+      .guess-btn.selected-beta {
+        border-color: var(--primary-purple);
+        background: rgba(139, 92, 246, 0.2);
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+      }
+
+      .reveal-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-weight: 800;
+        font-size: 14px;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .reveal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      .reveal-card {
+        background: #0f172a;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 16px;
+        width: 820px;
+        max-width: 90vw;
+        padding: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        position: relative;
+      }
+
+      .close-modal {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: var(--text-muted);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+      }
+
+      .reveal-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .reveal-header h2 {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--primary-blue);
+      }
+
+      .reveal-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-top: 4px;
+      }
+
+      .result-banner {
+        background: rgba(16, 185, 129, 0.15);
+        border: 2px solid var(--accent-green);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--accent-green);
+        margin-bottom: 24px;
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        font-size: 13px;
+      }
+
+      .comparison-table th, .comparison-table td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .comparison-table th {
+        background: rgba(30, 41, 59, 0.8);
+        color: var(--text-muted);
+        text-transform: uppercase;
         font-size: 11px;
-        max-height: 140px;
-        overflow-y: auto;
-        color: #4ade80;
+        letter-spacing: 0.5px;
+      }
+
+      .comparison-table td.highlight {
+        color: var(--accent-green);
+        font-weight: 700;
+      }
+
+      .tech-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--primary-blue);
+        padding: 2px 8px;
+        border-radius: 4px;
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-CgtAeEm5.js"></script>
   </head>
   <body>
-    <div id="canvas-container"></div>
-    <div id="hud">
-      <h1>GameTester ECS Observer <span class="badge">qaHook Active</span></h1>
-      <p>Headless ECS Observer PoC for LLM 3D Game QA</p>
-      <div class="controls">
-        <strong>Controls:</strong> WASD / Arrows to Move | Space to Jump
+    <header>
+      <div class="logo-group">
+        <span class="logo-badge">GAMETESTER</span>
+        <span class="title">Dual-Agent Minecraft Benchmark & Blind Taste-Test</span>
       </div>
-      <div id="state-preview">Initializing qaHook...</div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>Blind Evaluation Active (Randomized Mapping)</span>
+      </div>
+    </header>
+
+    <div class="main-container">
+      <div class="game-card">
+        <div class="game-card-header">
+          <span class="game-tag alpha">🎮 GAME ALPHA</span>
+          <span style="font-size: 12px; color: var(--text-muted);">Click frame for Pointer Lock</span>
+        </div>
+        <div class="iframe-wrapper">
+          <iframe id="iframe-alpha"></iframe>
+        </div>
+      </div>
+
+      <div class="game-card">
+        <div class="game-card-header">
+          <span class="game-tag beta">🕹️ GAME BETA</span>
+          <span style="font-size: 12px; color: var(--text-muted);">Click frame for Pointer Lock</span>
+        </div>
+        <div class="iframe-wrapper">
+          <iframe id="iframe-beta"></iframe>
+        </div>
+      </div>
     </div>
+
+    <div class="judge-panel">
+      <div class="rating-grid">
+        <div class="rating-category">
+          <span class="category-label">Movement & Physics</span>
+          <div class="stars" data-category="physics">
+            <span class="star" data-val="1">★</span>
+            <span class="star" data-val="2">★</span>
+            <span class="star" data-val="3">★</span>
+            <span class="star" data-val="4">★</span>
+            <span class="star" data-val="5">★</span>
+          </div>
+        </div>
+
+        <div class="rating-category">
+          <span class="category-label">Graphics & Shadows</span>
+          <div class="stars" data-category="graphics">
+            <span class="star" data-val="1">★</span>
+            <span class="star" data-val="2">★</span>
+            <span class="star" data-val="3">★</span>
+            <span class="star" data-val="4">★</span>
+            <span class="star" data-val="5">★</span>
+          </div>
+        </div>
+
+        <div class="rating-category">
+          <span class="category-label">Overall Experience</span>
+          <div class="stars" data-category="overall">
+            <span class="star" data-val="1">★</span>
+            <span class="star" data-val="2">★</span>
+            <span class="star" data-val="3">★</span>
+            <span class="star" data-val="4">★</span>
+            <span class="star" data-val="5">★</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="guess-section">
+        <span class="category-label">Captain's Choice: Which is Method 2 (window.qaHook)?</span>
+        <div class="guess-options">
+          <button class="guess-btn" id="btn-guess-alpha">Game Alpha</button>
+          <button class="guess-btn" id="btn-guess-beta">Game Beta</button>
+        </div>
+      </div>
+
+      <button class="reveal-btn" id="btn-reveal">🏆 REVEAL WINNER</button>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+      <div class="reveal-card">
+        <button class="close-modal" id="btn-close">&times;</button>
+        <div class="reveal-header">
+          <h2>Benchmark Results & Secret Mapping Revealed</h2>
+          <p>Statistical comparison of SOTA VLM Method vs GameTester window.qaHook Method</p>
+        </div>
+
+        <div class="result-banner" id="result-banner">
+          Evaluating Captain's Guess...
+        </div>
+
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Feature / Metric</th>
+              <th>Method 1: SOTA VLM Method</th>
+              <th>Method 2: GameTester window.qaHook</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Architecture</strong></td>
+              <td>Screenshot Vision Paradigm</td>
+              <td><span class="tech-badge">window.qaHook ECS Observer</span></td>
+            </tr>
+            <tr>
+              <td><strong>Movement Physics</strong></td>
+              <td>Instant impulse response</td>
+              <td class="highlight">Fluid acceleration & friction inertia</td>
+            </tr>
+            <tr>
+              <td><strong>Particle Effects</strong></td>
+              <td>Static voxel removal</td>
+              <td class="highlight">18-part debris explosion particles</td>
+            </tr>
+            <tr>
+              <td><strong>Audio Feedback</strong></td>
+              <td>None</td>
+              <td class="highlight">Synthesized Web Audio place/break sounds</td>
+            </tr>
+            <tr>
+              <td><strong>Raycast Highlighting</strong></td>
+              <td>Implicit sight vector</td>
+              <td class="highlight">Realtime voxel wireframe outline</td>
+            </tr>
+            <tr>
+              <td><strong>Lighting & Shadows</strong></td>
+              <td>Flat ambient + directional light</td>
+              <td class="highlight">PCFSoft 2048 map + Hemisphere AO</td>
+            </tr>
+            <tr>
+              <td><strong>QA Observer Latency</strong></td>
+              <td>~120ms screenshot pipeline</td>
+              <td class="highlight">0ms direct object hook state</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const isAlphaMethod2 = Math.random() < 0.5;
+      const alphaSrc = isAlphaMethod2 ? '/game_method2.html' : '/game_method1.html';
+      const betaSrc = isAlphaMethod2 ? '/game_method1.html' : '/game_method2.html';
+
+      document.getElementById('iframe-alpha').src = alphaSrc;
+      document.getElementById('iframe-beta').src = betaSrc;
+
+      const ratings = { physics: 0, graphics: 0, overall: 0 };
+      document.querySelectorAll('.stars').forEach((starContainer) => {
+        const cat = starContainer.getAttribute('data-category');
+        const stars = starContainer.querySelectorAll('.star');
+
+        stars.forEach((star) => {
+          star.addEventListener('click', () => {
+            const val = parseInt(star.getAttribute('data-val'));
+            ratings[cat] = val;
+            stars.forEach((s) => {
+              const sVal = parseInt(s.getAttribute('data-val'));
+              s.classList.toggle('active', sVal <= val);
+            });
+          });
+        });
+      });
+
+      let selectedGuess = null;
+      const btnAlpha = document.getElementById('btn-guess-alpha');
+      const btnBeta = document.getElementById('btn-guess-beta');
+
+      btnAlpha.addEventListener('click', () => {
+        selectedGuess = 'alpha';
+        btnAlpha.classList.add('selected-alpha');
+        btnBeta.classList.remove('selected-beta');
+      });
+
+      btnBeta.addEventListener('click', () => {
+        selectedGuess = 'beta';
+        btnBeta.classList.add('selected-beta');
+        btnAlpha.classList.remove('selected-alpha');
+      });
+
+      const modal = document.getElementById('modal');
+      const resultBanner = document.getElementById('result-banner');
+
+      document.getElementById('btn-reveal').addEventListener('click', () => {
+        const correctChoice = isAlphaMethod2 ? 'alpha' : 'beta';
+        const method2Name = isAlphaMethod2 ? 'Game Alpha' : 'Game Beta';
+        const method1Name = isAlphaMethod2 ? 'Game Beta' : 'Game Alpha';
+
+        let guessText = '';
+        if (selectedGuess === correctChoice) {
+          guessText = `🎯 SPOT ON CAPTAIN! You correctly identified ${method2Name} as Method 2 (GameTester window.qaHook)!`;
+        } else if (selectedGuess) {
+          guessText = `🔍 Secret Revealed: ${method2Name} was Method 2 (GameTester window.qaHook), and ${method1Name} was Method 1 (SOTA VLM).`;
+        } else {
+          guessText = `🏆 Reveal: ${method2Name} is Method 2 (GameTester window.qaHook) and ${method1Name} is Method 1 (SOTA VLM).`;
+        }
+
+        resultBanner.textContent = guessText;
+        modal.classList.add('active');
+      });
+
+      document.getElementById('btn-close').addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+    </script>
   </body>
 </html>

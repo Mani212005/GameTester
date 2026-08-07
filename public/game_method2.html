@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameTester - Method 2 (GameTester window.qaHook Optimized)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        overflow: hidden;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+        user-select: none;
+      }
+      #canvas-container {
+        width: 100vw;
+        height: 100vh;
+        cursor: crosshair;
+      }
+      #crosshair {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+        z-index: 10;
+      }
+      #crosshair::before,
+      #crosshair::after {
+        content: '';
+        position: absolute;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+      }
+      #crosshair::before {
+        top: 7px;
+        left: 0;
+        width: 16px;
+        height: 2px;
+      }
+      #crosshair::after {
+        top: 0;
+        left: 7px;
+        width: 2px;
+        height: 16px;
+      }
+
+      #hud {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        padding: 14px;
+        border-radius: 12px;
+        width: 340px;
+        font-size: 13px;
+        line-height: 1.4;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        z-index: 20;
+      }
+      #hud h1 {
+        font-size: 15px;
+        font-weight: 700;
+        color: #38bdf8;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .badge {
+        background: #10b981;
+        color: white;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 6px;
+      }
+      .instruction-box {
+        background: rgba(16, 185, 129, 0.15);
+        border-left: 3px solid #10b981;
+        padding: 6px 10px;
+        border-radius: 4px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #e2e8f0;
+      }
+      #state-preview {
+        margin-top: 10px;
+        background: #090d16;
+        padding: 8px;
+        border-radius: 6px;
+        font-family: 'JetBrains Mono', Consolas, monospace;
+        font-size: 10.5px;
+        color: #4ade80;
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid rgba(56, 189, 248, 0.15);
+      }
+
+      #hotbar-container {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+      }
+      #hotbar {
+        display: flex;
+        gap: 8px;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(16px);
+        border: 2px solid rgba(56, 189, 248, 0.3);
+        padding: 6px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      }
+      .hotbar-slot {
+        width: 54px;
+        height: 54px;
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        transition: all 0.15s ease;
+      }
+      .hotbar-slot.active {
+        border-color: #38bdf8;
+        background: rgba(56, 189, 248, 0.25);
+        transform: scale(1.06);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+      }
+      .slot-num {
+        position: absolute;
+        top: 2px;
+        left: 5px;
+        font-size: 10px;
+        font-weight: bold;
+        color: #94a3b8;
+      }
+      .block-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        margin-top: 2px;
+      }
+      .slot-name {
+        font-size: 9.5px;
+        color: #e2e8f0;
+        margin-top: 2px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+
+    <div id="hud">
+      <h1>
+        Minecraft Voxel Engine
+        <span class="badge">Method 2: qaHook ECS</span>
+      </h1>
+      <div class="instruction-box">
+        <strong>⚡ Click canvas to play (Inertia + Sound + Shadows)</strong>
+      </div>
+      <div id="state-preview">Initializing window.qaHook ECS Observer...</div>
+    </div>
+
+    <div id="hotbar-container">
+      <div id="hotbar"></div>
+    </div>
+
+    <script type="module" src="/src/minecraft/game_method2.ts"></script>
+  </body>
+</html>

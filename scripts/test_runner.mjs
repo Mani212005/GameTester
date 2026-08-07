@@ -28,50 +28,56 @@ async function runTestSuite() {
 
   // 2. Launch Playwright Chromium Headless
   console.log('[2/4] Launching Playwright Headless Chromium...');
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--ignore-gpu-blocklist', '--use-gl=angle', '--use-angle=swiftshader'],
+  });
   const page = await browser.newPage();
+
+  page.on('console', (msg) => console.log(`[Browser Console] ${msg.type()}: ${msg.text()}`));
+  page.on('pageerror', (err) => console.log(`[Browser Unhandled Error] ${err.stack || err.message}`));
 
   try {
     console.log(`[Playwright] Navigating to ${serverUrl}...`);
-    await page.goto(serverUrl);
+    await page.goto(serverUrl, { waitUntil: 'load' });
 
     // Wait for qaHook initialization
-    await page.waitForFunction(() => window.qaHook !== undefined, { timeout: 10000 });
+    await page.waitForFunction(() => typeof window.qaHook !== 'undefined', { timeout: 15000 });
     console.log('[Playwright] window.qaHook detected successfully!\n');
 
     console.log('[3/4] Running Deterministic QA Test Suite...\n');
 
     // ----------------------------------------------------
-    // TEST 1: Initial Scene State Serialization
+    // TEST 1: Minecraft Voxel World State Serialization
     // ----------------------------------------------------
     {
       const tStart = Date.now();
-      const testName = 'Test 1: Initial Scene State Serialization';
+      const testName = 'Test 1: Minecraft Voxel World State Serialization';
       try {
         await page.evaluate(() => {
           window.qaHook.setManualMode(true);
         });
         const state = await page.evaluate(() => window.qaHook.getSceneState());
 
-        const entityCount = state.entities.length;
-        const hasPlayer = state.entities.some((e) => e.name === 'PlayerCube');
-        const hasFloor = state.entities.some((e) => e.name === 'FloorGround');
+        const totalBlocks = state.worldState.totalBlocks;
+        const hasGrass = (state.worldState.blockCounts['Grass'] || 0) > 0;
+        const hasStone = (state.worldState.blockCounts['Stone'] || 0) > 0;
         const isGrounded = state.playerState.isGrounded;
 
-        const passed = entityCount >= 4 && hasPlayer && hasFloor && isGrounded;
-        const details = `Serialized ${entityCount} entities (Player, Floor, Obstacles). Player position: (${state.playerState.position.x}, ${state.playerState.position.y}, ${state.playerState.position.z}), Grounded: ${isGrounded}`;
+        const passed = totalBlocks > 1000 && hasGrass && hasStone;
+        const details = `Serialized Voxel World with ${totalBlocks} total blocks (Grass, Dirt, Stone, Wood, Leaves). Player position: (${state.playerState.position.x}, ${state.playerState.position.y}, ${state.playerState.position.z}), Grounded: ${isGrounded}`;
 
         testResults.push({
           name: testName,
           passed,
           durationMs: Date.now() - tStart,
           details,
-          snapshot: { playerState: state.playerState, entityNames: state.entities.map((e) => e.name) },
+          snapshot: { playerState: state.playerState, worldState: state.worldState },
         });
         if (passed) {
           console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
         } else {
-          console.log(`  ✗ ${testName} [FAIL]: entityCount=${entityCount}, hasPlayer=${hasPlayer}, hasFloor=${hasFloor}, isGrounded=${isGrounded}`);
+          console.log(`  ✗ ${testName} [FAIL]: totalBlocks=${totalBlocks}, hasGrass=${hasGrass}, hasStone=${hasStone}`);
         }
       } catch (err) {
         testResults.push({
@@ -85,16 +91,16 @@ async function runTestSuite() {
     }
 
     // ----------------------------------------------------
-    // TEST 2: Deterministic Physics Stepping & Movement Input
+    // TEST 2: Deterministic Input Injection & Movement
     // ----------------------------------------------------
     {
       const tStart = Date.now();
       const testName = 'Test 2: Deterministic Input Injection & Movement';
       try {
         const resultState = await page.evaluate(() => {
-          window.qaHook.resetPlayer({ x: 0, y: 1, z: 0 });
+          window.qaHook.resetPlayer({ x: 0, y: 10, z: 0 });
           window.qaHook.injectInput('move_forward');
-          for (let i = 0; i < 10; i++) {
+          for (let i = 0; i < 15; i++) {
             window.qaHook.step(50);
           }
           window.qaHook.injectInput('stop');
@@ -131,11 +137,11 @@ async function runTestSuite() {
       const testName = 'Test 3: Jump Impulse & Gravity Physics Simulation';
       try {
         const jumpResults = await page.evaluate(() => {
-          window.qaHook.resetPlayer({ x: 0, y: 1, z: 0 });
+          window.qaHook.resetPlayer({ x: 0, y: 7.5, z: 0 });
           window.qaHook.injectInput('jump');
           const airState = window.qaHook.step(50); // Step 1 tick for jump impulse
 
-          for (let i = 0; i < 30; i++) {
+          for (let i = 0; i < 60; i++) {
             window.qaHook.step(50);
           }
           const landedState = window.qaHook.getSceneState();
@@ -144,7 +150,7 @@ async function runTestSuite() {
         });
 
         const jumpTriggered = jumpResults.airState.playerState.velocity.y > 0;
-        const reachedApex = jumpResults.airState.playerState.position.y > 1.1;
+        const reachedApex = jumpResults.airState.playerState.position.y > 7.5;
         const landedBack = jumpResults.landedState.playerState.isGrounded;
 
         const passed = jumpTriggered && reachedApex && landedBack;
@@ -157,7 +163,11 @@ async function runTestSuite() {
           details,
           snapshot: { airState: jumpResults.airState.playerState, landedState: jumpResults.landedState.playerState },
         });
-        console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
+        if (passed) {
+          console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
+        } else {
+          console.log(`  ✗ ${testName} [FAIL]: jumpTriggered=${jumpTriggered}, reachedApex=${reachedApex}, landedBack=${landedBack}`);
+        }
       } catch (err) {
         testResults.push({
           name: testName,
@@ -165,22 +175,22 @@ async function runTestSuite() {
           durationMs: Date.now() - tStart,
           details: err.message,
         });
-        console.log(`  ✗ ${testName} [FAIL]`);
+        console.log(`  ✗ ${testName} [FAIL]: ${err.message}`);
       }
     }
 
     // ----------------------------------------------------
-    // TEST 4: State Invariant Assertion (Falling Off Floor Boundary)
+    // TEST 4: State Invariant Assertion (Boundary / Fall Detection)
     // ----------------------------------------------------
     {
       const tStart = Date.now();
-      const testName = 'Test 4: State Invariant Assertion (Fall Detection)';
+      const testName = 'Test 4: State Invariant Assertion (Boundary / Fall Detection)';
       try {
         const assertionEvaluation = await page.evaluate(() => {
-          window.qaHook.resetPlayer({ x: 5.0, y: 1, z: 0 });
+          window.qaHook.resetPlayer({ x: 15.0, y: 7.5, z: 0 });
           window.qaHook.injectInput('move_right');
 
-          for (let i = 0; i < 30; i++) {
+          for (let i = 0; i < 100; i++) {
             window.qaHook.step(50);
           }
           window.qaHook.injectInput('stop');
@@ -192,61 +202,21 @@ async function runTestSuite() {
         });
 
         const invariantDetected = assertionEvaluation.pass === false;
+        const passed = invariantDetected;
         const details = `assertState correctly flagged invariant violation when player Y reached ${assertionEvaluation.state.playerState.position.y}`;
-
-        testResults.push({
-          name: testName,
-          passed: invariantDetected,
-          durationMs: Date.now() - tStart,
-          details,
-          snapshot: { assertionResult: assertionEvaluation },
-        });
-        console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
-      } catch (err) {
-        testResults.push({
-          name: testName,
-          passed: false,
-          durationMs: Date.now() - tStart,
-          details: err.message,
-        });
-        console.log(`  ✗ ${testName} [FAIL]`);
-      }
-    }
-
-    // ----------------------------------------------------
-    // TEST 5: Real-time Physics Collision Observer
-    // ----------------------------------------------------
-    {
-      const tStart = Date.now();
-      const testName = 'Test 5: Real-time Physics Collision Observer';
-      try {
-        const collisionResult = await page.evaluate(() => {
-          window.qaHook.resetPlayer({ x: -1.2, y: 1, z: -2.0 });
-          window.qaHook.injectInput('move_left');
-
-          for (let i = 0; i < 15; i++) {
-            window.qaHook.step(50);
-          }
-          window.qaHook.injectInput('stop');
-
-          const state = window.qaHook.getSceneState();
-          const playerEntity = state.entities.find((e) => e.name === 'PlayerCube');
-          return { state, playerEntity };
-        });
-
-        const isColliding = collisionResult.playerEntity?.isColliding ?? false;
-        const collidingWithObs = collisionResult.playerEntity?.collidingWith.includes('OrangeObstacle') ?? false;
-        const passed = isColliding && collidingWithObs;
-        const details = `Collision status: isColliding=${isColliding}, collidingWith=[${collisionResult.playerEntity?.collidingWith.join(', ')}]`;
 
         testResults.push({
           name: testName,
           passed,
           durationMs: Date.now() - tStart,
           details,
-          snapshot: { playerEntity: collisionResult.playerEntity },
+          snapshot: { assertionResult: assertionEvaluation },
         });
-        console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
+        if (passed) {
+          console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
+        } else {
+          console.log(`  ✗ ${testName} [FAIL]: invariantDetected=${invariantDetected}`);
+        }
       } catch (err) {
         testResults.push({
           name: testName,
@@ -254,7 +224,54 @@ async function runTestSuite() {
           durationMs: Date.now() - tStart,
           details: err.message,
         });
-        console.log(`  ✗ ${testName} [FAIL]`);
+        console.log(`  ✗ ${testName} [FAIL]: ${err.message}`);
+      }
+    }
+
+    // ----------------------------------------------------
+    // TEST 5: Interactive Voxel Modification Observer (Block Break / Place)
+    // ----------------------------------------------------
+    {
+      const tStart = Date.now();
+      const testName = 'Test 5: Interactive Voxel Modification Observer';
+      try {
+        const voxelModResult = await page.evaluate(() => {
+          window.qaHook.resetPlayer({ x: 0, y: 7.5, z: 0 });
+          window.qaHook.setPlayerLookAt(0, -Math.PI / 3); // Look down towards grass block
+          const initialBlocks = window.qaHook.getVoxelState().totalBlocks;
+
+          const brokeBlock = window.qaHook.breakTargetedBlock();
+          const stateAfterBreak = window.qaHook.getVoxelState().totalBlocks;
+
+          const placedBlock = window.qaHook.placeSelectedBlock(4); // Place Wood
+          const stateAfterPlace = window.qaHook.getVoxelState().totalBlocks;
+
+          return { initialBlocks, brokeBlock, stateAfterBreak, placedBlock, stateAfterPlace };
+        });
+
+        const passed = voxelModResult.brokeBlock && voxelModResult.stateAfterBreak === voxelModResult.initialBlocks - 1 && voxelModResult.placedBlock && voxelModResult.stateAfterPlace === voxelModResult.initialBlocks;
+        const details = `Block Break & Place: Initial=${voxelModResult.initialBlocks}, AfterBreak=${voxelModResult.stateAfterBreak}, AfterPlace=${voxelModResult.stateAfterPlace}`;
+
+        testResults.push({
+          name: testName,
+          passed,
+          durationMs: Date.now() - tStart,
+          details,
+          snapshot: voxelModResult,
+        });
+        if (passed) {
+          console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
+        } else {
+          console.log(`  ✗ ${testName} [FAIL]: brokeBlock=${voxelModResult.brokeBlock}, placedBlock=${voxelModResult.placedBlock}`);
+        }
+      } catch (err) {
+        testResults.push({
+          name: testName,
+          passed: false,
+          durationMs: Date.now() - tStart,
+          details: err.message,
+        });
+        console.log(`  ✗ ${testName} [FAIL]: ${err.message}`);
       }
     }
 
