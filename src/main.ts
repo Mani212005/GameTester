@@ -66,7 +66,7 @@ const contactMaterial = new CANNON.ContactMaterial(
 world.addContactMaterial(contactMaterial);
 
 // 3. Voxel World & Player Initialization
-const voxelWorld = new VoxelWorld(scene, world, physicsMaterial);
+const voxelWorld = new VoxelWorld(scene);
 
 // Create Player physics body
 const playerShape = new CANNON.Box(new CANNON.Vec3(0.35, 0.85, 0.35));

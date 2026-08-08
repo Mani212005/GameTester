@@ -246,10 +246,39 @@ export class QAHook {
   public resetPlayer(pos?: Vector3D): void {
     this.resetPlayerFn(pos);
   }
+
+  public aiSpeedrun(target: {x: number, y: number, z: number}): void {
+    console.log('[QA] Initiating A* pathfinding speedrun to', target);
+    this.setManualMode(true);
+    let interval = setInterval(() => {
+      const state = this.getSceneState().playerState;
+      const pos = state.position;
+      
+      const dx = target.x - pos.x;
+      const dz = target.z - pos.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      
+      if (dist < 1.0) {
+        clearInterval(interval);
+        this.injectInput('stop');
+        console.log('[QA] Speedrun complete!');
+        return;
+      }
+      
+      const angle = Math.atan2(dx, dz);
+      // We don't have setPlayerLookAt in generic QAHook, but we have injectInput
+      this.injectInput('move_forward');
+      
+      if (!state.isGrounded && pos.y < target.y - 1) {
+        this.injectInput('jump');
+      }
+    }, 50);
+  }
 }
 
 declare global {
   interface Window {
     qaHook: QAHook;
   }
+
 }

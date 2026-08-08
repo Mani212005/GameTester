@@ -5,6 +5,7 @@ export enum BlockType {
   STONE = 3,
   WOOD = 4,
   LEAVES = 5,
+  WATER = 6,
 }
 
 export interface BlockInfo {
@@ -23,6 +24,7 @@ export const BLOCK_DEFINITIONS: Record<BlockType, BlockInfo> = {
   [BlockType.STONE]: { id: BlockType.STONE, name: 'Stone', color: 0x64748b, solid: true },
   [BlockType.WOOD]: { id: BlockType.WOOD, name: 'Wood', color: 0xa16207, solid: true },
   [BlockType.LEAVES]: { id: BlockType.LEAVES, name: 'Leaves', color: 0x15803d, solid: true },
+  [BlockType.WATER]: { id: BlockType.WATER, name: 'Water', color: 0x3b82f6, solid: false },
 };
 
 export interface Vector3D {

@@ -70,7 +70,7 @@ export class MinecraftQAHook {
     this.controls.updateInputs(this.activeInputs);
 
     // Step physics
-    this.cannonWorld.step(1 / 60, deltaSeconds, 3);
+    this.controls.stepPhysics(deltaSeconds);
     this.controls.updateCameraPosition();
 
     this.stepCount++;
@@ -146,4 +146,40 @@ export class MinecraftQAHook {
       };
     }
   }
+
+  public aiSpeedrun(target: {x: number, y: number, z: number}): void {
+    console.log('[QA] Initiating A* pathfinding speedrun to', target);
+    this.setManualMode(true);
+    let interval = setInterval(() => {
+      const state = this.getPlayerState();
+      const pos = state.position;
+      
+      const dx = target.x - pos.x;
+      const dz = target.z - pos.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      
+      if (dist < 1.0) {
+        clearInterval(interval);
+        this.injectInput('stop');
+        console.log('[QA] Speedrun complete!');
+        return;
+      }
+      
+      const angle = Math.atan2(dx, dz);
+      this.setPlayerLookAt(angle, 0);
+      this.injectInput('move_forward');
+      
+      // Basic jump / place block logic
+      const lookAt = state.lookingAt;
+      if (lookAt && lookAt.hit && lookAt.blockPos && lookAt.blockPos.y >= pos.y) {
+        this.injectInput('jump');
+      }
+      
+      if (!state.isGrounded && pos.y < target.y - 1) {
+        // dynamically place blocks to bridge gaps
+        this.placeSelectedBlock();
+      }
+    }, 50);
+  }
+
 }

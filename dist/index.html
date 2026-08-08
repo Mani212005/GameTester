@@ -402,6 +402,11 @@
             <option value="lotr">🧙‍♂️ 3D Shire LOTR Environment</option>
           </select>
         </div>
+        <div style="display: flex; gap: 12px; margin-left: 20px; font-size: 12px; align-items: center;">
+          <label>Gravity: <input type="range" id="slider-gravity" min="5" max="40" value="20" style="width: 60px;" oninput="updatePhysics()"></label>
+          <label>Friction: <input type="range" id="slider-friction" min="0" max="1" step="0.05" value="0.1" style="width: 60px;" oninput="updatePhysics()"></label>
+          <label>Jump: <input type="range" id="slider-jump" min="3" max="15" value="6.5" step="0.5" style="width: 60px;" oninput="updatePhysics()"></label>
+        </div>
       </div>
       <div class="status-pill">
         <span class="status-dot"></span>
@@ -586,6 +591,16 @@
       const iframeM1 = document.getElementById('iframe-m1');
       const iframeM2 = document.getElementById('iframe-m2');
       const gameSelector = document.getElementById('game-selector');
+
+      function updatePhysics() {
+        const gravity = parseFloat(document.getElementById('slider-gravity').value);
+        const friction = parseFloat(document.getElementById('slider-friction').value);
+        const jump = parseFloat(document.getElementById('slider-jump').value);
+
+        const data = { type: 'UPDATE_PHYSICS', gravity, friction, jumpPower: jump };
+        iframeM1.contentWindow.postMessage(data, '*');
+        iframeM2.contentWindow.postMessage(data, '*');
+      }
 
       function loadGameBenchmark(gameKey) {
         currentGame = gameKey;

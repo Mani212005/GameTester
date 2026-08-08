@@ -128,6 +128,22 @@ const leavesTex = createPixelTexture((ctx, w, h) => {
   }
 });
 
+
+// 8. Water Texture
+const waterTex = createPixelTexture((ctx, w, h) => {
+  ctx.fillStyle = '#3b82f6';
+  ctx.fillRect(0, 0, w, h);
+  const blues = ['#2563eb', '#1d4ed8', '#60a5fa'];
+  for (let x = 0; x < w; x++) {
+    for (let y = 0; y < h; y++) {
+      if (Math.random() > 0.4) {
+        ctx.fillStyle = blues[Math.floor(Math.random() * blues.length)];
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+});
+
 export function getBlockMaterials(type: BlockType): THREE.Material[] | THREE.Material {
   switch (type) {
     case BlockType.GRASS: {
@@ -151,4 +167,47 @@ export function getBlockMaterials(type: BlockType): THREE.Material[] | THREE.Mat
     default:
       return new THREE.MeshStandardMaterial({ color: 0xffffff });
   }
+}
+
+
+export interface AtlasUVs {
+  [BlockType.GRASS]: { top: number, side: number, bottom: number };
+  [BlockType.DIRT]: { all: number };
+  [BlockType.STONE]: { all: number };
+  [BlockType.WOOD]: { top: number, side: number };
+  [BlockType.LEAVES]: { all: number };
+  [BlockType.WATER]: { all: number };
+}
+
+export function createTextureAtlas(): { texture: THREE.CanvasTexture; uvs: Record<number, number[]> } {
+  const canvas = document.createElement('canvas');
+  const size = 16;
+  const count = 10;
+  canvas.width = size;
+  canvas.height = size * count;
+  const ctx = canvas.getContext('2d')!;
+
+  const textures = [
+    grassTopTex, grassSideTex, dirtTex, stoneTex, woodSideTex, woodTopTex, leavesTex, waterTex
+  ];
+
+  textures.forEach((tex, i) => {
+    ctx.drawImage(tex.image, 0, i * size);
+  });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const uvs: Record<number, number[]> = {
+    [BlockType.GRASS]: [0, 1, 2, 2, 1, 1], // +x, -x, +y, -y, +z, -z  (index in atlas)
+    [BlockType.DIRT]: [2, 2, 2, 2, 2, 2],
+    [BlockType.STONE]: [3, 3, 3, 3, 3, 3],
+    [BlockType.WOOD]: [4, 4, 5, 5, 4, 4],
+    [BlockType.LEAVES]: [6, 6, 6, 6, 6, 6],
+    [BlockType.WATER]: [7, 7, 7, 7, 7, 7]
+  };
+
+  return { texture, uvs };
 }

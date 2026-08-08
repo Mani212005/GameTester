@@ -302,80 +302,13 @@ scene.add(sunLight);
 const particleManager = new ParticleManager(scene);
 
 // Cannon Physics World with High-FPS Sub-step Solver
-const world = new CANNON.World();
-world.gravity.set(0, -20, 0);
-world.broadphase = new CANNON.NaiveBroadphase();
-(world.solver as CANNON.GSSolver).iterations = 15; // High precision collision response
-
-const physicsMaterial = new CANNON.Material('minecraft');
-const contactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, {
-  friction: 0.1,
-  restitution: 0.0,
-});
-world.addContactMaterial(contactMaterial);
-
-// Custom VoxelWorld subclass supporting block textures & dynamic shadows
-class Method2VoxelWorld extends VoxelWorld {
-  public override rebuildWorld(): void {
-    super.rebuildWorld();
-
-    const typesToReplace = [
-      BlockType.GRASS,
-      BlockType.DIRT,
-      BlockType.STONE,
-      BlockType.WOOD,
-      BlockType.LEAVES,
-    ];
-
-    const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const dummy = new THREE.Object3D();
-
-    for (const type of typesToReplace) {
-      const positions: { x: number; y: number; z: number }[] = [];
-      for (let x = this.minX; x <= this.maxX; x++) {
-        for (let z = this.minZ; z <= this.maxZ; z++) {
-          for (let y = this.minY; y <= this.maxY; y++) {
-            if (this.getBlock(x, y, z) === type) {
-              positions.push({ x, y, z });
-            }
-          }
-        }
-      }
-
-      if (positions.length === 0) continue;
-
-      const materials = getBlockMaterials(type);
-      const instancedMesh = new THREE.InstancedMesh(boxGeometry, materials, positions.length);
-      instancedMesh.castShadow = true;
-      instancedMesh.receiveShadow = true;
-
-      positions.forEach((pos, idx) => {
-        dummy.position.set(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5);
-        dummy.updateMatrix();
-        instancedMesh.setMatrixAt(idx, dummy.matrix);
-      });
-
-      instancedMesh.instanceMatrix.needsUpdate = true;
-      this.scene.add(instancedMesh);
-    }
-  }
-}
-
-const voxelWorld = new Method2VoxelWorld(scene, world, physicsMaterial);
+const voxelWorld = new VoxelWorld(scene);
 
 // Create Player physics body
-const playerShape = new CANNON.Box(new CANNON.Vec3(0.35, 0.85, 0.35));
-const playerBody = new CANNON.Body({
-  mass: 60,
-  shape: playerShape,
-  material: physicsMaterial,
-  fixedRotation: true,
-});
-playerBody.position.set(0, 10, 0);
-world.addBody(playerBody);
+
 
 // Player Controls
-const controls = new Method2PlayerControls(camera, playerBody, voxelWorld, renderer.domElement);
+const controls = new Method2PlayerControls(camera, null, voxelWorld, renderer.domElement);
 controls.particleManager = particleManager;
 
 // ---------------------------------------------------------------------
@@ -393,7 +326,7 @@ scene.add(raycastHighlight);
 // ---------------------------------------------------------------------
 const qaHookInstance = new MinecraftQAHook({
   scene,
-  cannonWorld: world,
+  cannonWorld: null as any,
   renderer,
   camera,
   voxelWorld,
@@ -403,8 +336,8 @@ const qaHookInstance = new MinecraftQAHook({
 // Extend qaHookInstance with Method 2 diagnostic metrics
 (qaHookInstance as any).getPhysicsMetrics = () => {
   return {
-    solverIterations: (world.solver as CANNON.GSSolver).iterations,
-    activeBodies: world.bodies.length,
+    solverIterations: 0,
+    activeBodies: 0,
     particleCount: (particleManager as any).particles.length,
     shadowMapEnabled: renderer.shadowMap.enabled,
     fps: currentFps,
@@ -452,7 +385,19 @@ let frameCount = 0;
 let currentFps = 60;
 let fpsTimer = performance.now();
 
+
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'UPDATE_PHYSICS') {
+    controls.gravity = e.data.gravity;
+    controls.friction = e.data.friction;
+    controls.jumpSpeed = e.data.jumpPower;
+  }
+});
+
+let liquidTimer = 0;
+
 function animate(now: number) {
+
   requestAnimationFrame(animate);
 
   const deltaMs = now - lastTime;
@@ -480,7 +425,7 @@ function animate(now: number) {
 
   if (!qaHookInstance.isManualMode()) {
     controls.updateInputs();
-    world.step(1 / 60, deltaSec, 4); // 4 physics sub-steps for crisp high-FPS collision
+    controls.stepPhysics(deltaSec); // 4 physics sub-steps for crisp high-FPS collision
     controls.updateCameraPosition();
     renderer.render(scene, camera);
   }
@@ -516,3 +461,140 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+// ---------------------------------------------------------------------
+// Mobile Dual-Stick Touch Controls
+// ---------------------------------------------------------------------
+function setupTouchJoysticks() {
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (!isTouch) return;
+
+  const container = document.createElement('div');
+  container.id = 'joysticks';
+  container.style.position = 'absolute';
+  container.style.bottom = '20px';
+  container.style.left = '20px';
+  container.style.right = '20px';
+  container.style.height = '120px';
+  container.style.pointerEvents = 'none';
+  container.style.display = 'flex';
+  container.style.justifyContent = 'space-between';
+  container.style.zIndex = '9999';
+  document.body.appendChild(container);
+
+  function createJoy(align: string) {
+    const pad = document.createElement('div');
+    pad.style.width = '120px';
+    pad.style.height = '120px';
+    pad.style.background = 'rgba(255, 255, 255, 0.2)';
+    pad.style.borderRadius = '50%';
+    pad.style.position = 'relative';
+    pad.style.pointerEvents = 'auto';
+
+    const stick = document.createElement('div');
+    stick.style.width = '50px';
+    stick.style.height = '50px';
+    stick.style.background = 'rgba(255, 255, 255, 0.6)';
+    stick.style.borderRadius = '50%';
+    stick.style.position = 'absolute';
+    stick.style.top = '35px';
+    stick.style.left = '35px';
+    pad.appendChild(stick);
+    container.appendChild(pad);
+
+    return { pad, stick };
+  }
+
+  const leftJoy = createJoy('left');
+  const rightJoy = createJoy('right');
+
+  let moveTouchId: number | null = null;
+  let lookTouchId: number | null = null;
+
+  leftJoy.pad.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    moveTouchId = touch.identifier;
+  });
+
+  leftJoy.pad.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (let i=0; i<e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === moveTouchId) {
+        const touch = e.changedTouches[i];
+        const rect = leftJoy.pad.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = touch.clientX - cx;
+        const dy = touch.clientY - cy;
+        
+        // Emulate keys
+        if (dy < -20) (controls as any).activeActions.add('move_forward'); else (controls as any).activeActions.delete('move_forward');
+        if (dy > 20) (controls as any).activeActions.add('move_backward'); else (controls as any).activeActions.delete('move_backward');
+        if (dx < -20) (controls as any).activeActions.add('move_left'); else (controls as any).activeActions.delete('move_left');
+        if (dx > 20) (controls as any).activeActions.add('move_right'); else (controls as any).activeActions.delete('move_right');
+        
+        leftJoy.stick.style.transform = `translate(${Math.max(-35, Math.min(35, dx))}px, ${Math.max(-35, Math.min(35, dy))}px)`;
+      }
+    }
+  });
+
+  const stopMove = (e: TouchEvent) => {
+    e.preventDefault();
+    for (let i=0; i<e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === moveTouchId) {
+        moveTouchId = null;
+        leftJoy.stick.style.transform = 'translate(0px, 0px)';
+        (controls as any).activeActions.delete('move_forward');
+        (controls as any).activeActions.delete('move_backward');
+        (controls as any).activeActions.delete('move_left');
+        (controls as any).activeActions.delete('move_right');
+      }
+    }
+  };
+  leftJoy.pad.addEventListener('touchend', stopMove);
+  leftJoy.pad.addEventListener('touchcancel', stopMove);
+
+  let lastLookX = 0;
+  let lastLookY = 0;
+  rightJoy.pad.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    lookTouchId = touch.identifier;
+    lastLookX = touch.clientX;
+    lastLookY = touch.clientY;
+  });
+
+  rightJoy.pad.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    for (let i=0; i<e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === lookTouchId) {
+        const touch = e.changedTouches[i];
+        const dx = touch.clientX - lastLookX;
+        const dy = touch.clientY - lastLookY;
+        lastLookX = touch.clientX;
+        lastLookY = touch.clientY;
+        
+        controls.yaw -= dx * 0.005;
+        controls.pitch -= dy * 0.005;
+        controls.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, controls.pitch));
+        controls.updateCameraRotation();
+      }
+    }
+  });
+
+  const stopLook = (e: TouchEvent) => {
+    e.preventDefault();
+    for (let i=0; i<e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === lookTouchId) {
+        lookTouchId = null;
+        rightJoy.stick.style.transform = 'translate(0px, 0px)';
+      }
+    }
+  };
+  rightJoy.pad.addEventListener('touchend', stopLook);
+  rightJoy.pad.addEventListener('touchcancel', stopLook);
+}
+
+setupTouchJoysticks();

@@ -94,7 +94,7 @@ class VLMVoxelWorld extends VoxelWorld {
   }
 }
 
-const voxelWorld = new VLMVoxelWorld(scene, world, physicsMaterial);
+const voxelWorld = new VLMVoxelWorld(scene);
 
 // Create Player physics body
 const playerShape = new CANNON.Box(new CANNON.Vec3(0.35, 0.85, 0.35));
