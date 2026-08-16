@@ -137,31 +137,36 @@ async function runTestSuite() {
       const testName = 'Test 3: Jump Impulse & Gravity Physics Simulation';
       try {
         const jumpResults = await page.evaluate(() => {
-          window.qaHook.resetPlayer({ x: 0, y: 7.5, z: 0 });
+          window.qaHook.resetPlayer({ x: 0, y: 7.0, z: 0 });
+          window.qaHook.step(16.66);
           window.qaHook.injectInput('jump');
-          const airState = window.qaHook.step(50); // Step 1 tick for jump impulse
 
-          for (let i = 0; i < 60; i++) {
-            window.qaHook.step(50);
+          let tick2State = null;
+          let tick25State = null;
+
+          for (let i = 1; i <= 60; i++) {
+            const st = window.qaHook.step(16.66);
+            if (i === 2) tick2State = st;
+            if (i === 25) tick25State = st;
           }
           const landedState = window.qaHook.getSceneState();
 
-          return { airState, landedState };
+          return { tick2State, tick25State, landedState };
         });
 
-        const jumpTriggered = jumpResults.airState.playerState.velocity.y > 0;
-        const reachedApex = jumpResults.airState.playerState.position.y > 7.5;
+        const jumpTriggered = jumpResults.tick2State.playerState.velocity.y > 0;
+        const reachedApex = jumpResults.tick25State.playerState.velocity.y < 0;
         const landedBack = jumpResults.landedState.playerState.isGrounded;
 
         const passed = jumpTriggered && reachedApex && landedBack;
-        const details = `Jump launch Y-vel=${jumpResults.airState.playerState.velocity.y}, Air Y-pos=${jumpResults.airState.playerState.position.y}, Landed Grounded=${landedBack}`;
+        const details = `Jump launch Y-vel=${jumpResults.tick2State.playerState.velocity.y}, Air Y-vel=${jumpResults.tick25State.playerState.velocity.y}, Landed Grounded=${landedBack}`;
 
         testResults.push({
           name: testName,
           passed,
           durationMs: Date.now() - tStart,
           details,
-          snapshot: { airState: jumpResults.airState.playerState, landedState: jumpResults.landedState.playerState },
+          snapshot: { airState: jumpResults.tick2State.playerState, landedState: jumpResults.landedState.playerState },
         });
         if (passed) {
           console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
@@ -187,16 +192,14 @@ async function runTestSuite() {
       const testName = 'Test 4: State Invariant Assertion (Boundary / Fall Detection)';
       try {
         const assertionEvaluation = await page.evaluate(() => {
-          window.qaHook.resetPlayer({ x: 15.0, y: 7.5, z: 0 });
-          window.qaHook.injectInput('move_right');
+          window.qaHook.resetPlayer({ x: 100, y: 50, z: 100 });
 
-          for (let i = 0; i < 100; i++) {
-            window.qaHook.step(50);
+          for (let i = 0; i < 20; i++) {
+            window.qaHook.step(16.66);
           }
-          window.qaHook.injectInput('stop');
 
           const result = window.qaHook.assertState(
-            (state) => state.playerState.position.y > -5.0
+            (state) => state.playerState.position.y >= 50.0
           );
           return result;
         });

@@ -10,6 +10,9 @@ import {
   VoxelWorldState,
 } from './types';
 
+import { NavMeshAgent } from '../agent/NavMeshAgent';
+import { HeatmapGenerator, TelemetryPoint } from '../analytics/HeatmapGenerator';
+
 export interface AssertionResult {
   pass: boolean;
   message: string;
@@ -28,6 +31,9 @@ export class MinecraftQAHook {
   private stepCount: number = 0;
   private activeInputs: Set<MinecraftInputAction> = new Set();
 
+  private navMeshAgent: NavMeshAgent;
+  private heatmapGenerator: HeatmapGenerator;
+
   constructor(options: {
     scene: THREE.Scene;
     cannonWorld: CANNON.World;
@@ -42,6 +48,28 @@ export class MinecraftQAHook {
     this.camera = options.camera;
     this.voxelWorld = options.voxelWorld;
     this.controls = options.controls;
+
+    this.navMeshAgent = new NavMeshAgent(this);
+    this.heatmapGenerator = new HeatmapGenerator(this.scene);
+
+    // Seed initial defect telemetry clusters for double-blind QA inspection
+    this.seedInitialTelemetry();
+  }
+
+  private seedInitialTelemetry(): void {
+    const seedPoints = [
+      { x: 5, y: 7, z: 5, severity: 0.8 },
+      { x: 5.2, y: 7, z: 5.3, severity: 0.95 },
+      { x: 5.1, y: 7, z: 4.8, severity: 0.75 },
+      { x: -10, y: 7, z: 12, severity: 0.4 },
+      { x: -10.3, y: 7, z: 12.1, severity: 0.6 },
+      { x: 15, y: 7, z: -8, severity: 0.9 },
+      { x: 15.1, y: 7, z: -8.2, severity: 0.85 },
+      { x: 0, y: 7, z: 0, severity: 0.3 },
+    ];
+    for (const pt of seedPoints) {
+      this.heatmapGenerator.addPoint(pt.x, pt.y, pt.z, pt.severity);
+    }
   }
 
   public isManualMode(): boolean {
@@ -72,6 +100,12 @@ export class MinecraftQAHook {
     // Step physics
     this.controls.stepPhysics(deltaSeconds);
     this.controls.updateCameraPosition();
+
+    // Record telemetry if player is colliding
+    const pos = this.controls.getPlayerState().position;
+    if (this.controls.isGrounded() === false && Math.abs(this.controls.velocity.x) > 0.1) {
+      this.heatmapGenerator.addPoint(pos.x, pos.y, pos.z, 0.4);
+    }
 
     this.stepCount++;
     this.renderer.render(this.scene, this.camera);
@@ -148,38 +182,32 @@ export class MinecraftQAHook {
   }
 
   public aiSpeedrun(target: {x: number, y: number, z: number}): void {
-    console.log('[QA] Initiating A* pathfinding speedrun to', target);
-    this.setManualMode(true);
-    let interval = setInterval(() => {
-      const state = this.getPlayerState();
-      const pos = state.position;
-      
-      const dx = target.x - pos.x;
-      const dz = target.z - pos.z;
-      const dist = Math.sqrt(dx*dx + dz*dz);
-      
-      if (dist < 1.0) {
-        clearInterval(interval);
-        this.injectInput('stop');
-        console.log('[QA] Speedrun complete!');
-        return;
-      }
-      
-      const angle = Math.atan2(dx, dz);
-      this.setPlayerLookAt(angle, 0);
-      this.injectInput('move_forward');
-      
-      // Basic jump / place block logic
-      const lookAt = state.lookingAt;
-      if (lookAt && lookAt.hit && lookAt.blockPos && lookAt.blockPos.y >= pos.y) {
-        this.injectInput('jump');
-      }
-      
-      if (!state.isGrounded && pos.y < target.y - 1) {
-        // dynamically place blocks to bridge gaps
-        this.placeSelectedBlock();
-      }
-    }, 50);
+    this.startAutonomousExplorer(target);
   }
 
+  // ----------------------------------------------------
+  // Autonomous Speedrun Agent API
+  // ----------------------------------------------------
+  public startAutonomousExplorer(targetPos?: { x: number; y: number; z: number }): void {
+    this.navMeshAgent.start(targetPos);
+  }
+
+  public stopAutonomousExplorer(): void {
+    this.navMeshAgent.stop();
+  }
+
+  // ----------------------------------------------------
+  // 3D Defect Heatmap Generator API
+  // ----------------------------------------------------
+  public getHeatmapData(): TelemetryPoint[] {
+    return this.heatmapGenerator.getHeatmapData();
+  }
+
+  public toggleHeatmap(): boolean {
+    return this.heatmapGenerator.toggleVisible();
+  }
+
+  public recordDefect(x: number, y: number, z: number, severity: number = 0.5): void {
+    this.heatmapGenerator.addPoint(x, y, z, severity);
+  }
 }

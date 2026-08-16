@@ -408,9 +408,12 @@
           <label>Jump: <input type="range" id="slider-jump" min="3" max="15" value="6.5" step="0.5" style="width: 60px;" oninput="updatePhysics()"></label>
         </div>
       </div>
-      <div class="status-pill">
-        <span class="status-dot"></span>
-        <span>Double-Blind Active · Zero Bias</span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="btn-toggle-dashboard-heatmap" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #f59e0b; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔥 Toggle 3D Heatmap</button>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>Double-Blind Active · Zero Bias</span>
+        </div>
       </div>
     </header>
 
@@ -600,6 +603,15 @@
         const data = { type: 'UPDATE_PHYSICS', gravity, friction, jumpPower: jump };
         iframeM1.contentWindow.postMessage(data, '*');
         iframeM2.contentWindow.postMessage(data, '*');
+      }
+
+      const btnDashboardHeatmap = document.getElementById('btn-toggle-dashboard-heatmap');
+      if (btnDashboardHeatmap) {
+        btnDashboardHeatmap.addEventListener('click', () => {
+          const data = { type: 'TOGGLE_HEATMAP' };
+          if (iframeM1.contentWindow) iframeM1.contentWindow.postMessage(data, '*');
+          if (iframeM2.contentWindow) iframeM2.contentWindow.postMessage(data, '*');
+        });
       }
 
       function loadGameBenchmark(gameKey) {
