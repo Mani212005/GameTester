@@ -423,6 +423,13 @@ window.addEventListener('message', (e) => {
     controls.friction = e.data.friction;
     controls.jumpSpeed = e.data.jumpPower;
   }
+  if (e.data && e.data.type === 'TOGGLE_HEATMAP') {
+    const isVisible = qaHookInstance.toggleHeatmap();
+    const btnHeatmap = document.getElementById('btn-toggle-heatmap');
+    if (btnHeatmap) {
+      btnHeatmap.style.background = isVisible ? 'rgba(245, 158, 11, 0.5)' : 'rgba(245, 158, 11, 0.2)';
+    }
+  }
 });
 
 let liquidTimer = 0;
