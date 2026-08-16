@@ -377,6 +377,37 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// HUD Control Button Listeners
+const btnHeatmap = document.getElementById('btn-toggle-heatmap');
+if (btnHeatmap) {
+  btnHeatmap.addEventListener('click', () => {
+    const isVisible = (window as any).qaHook.toggleHeatmap();
+    btnHeatmap.style.background = isVisible ? 'rgba(245, 158, 11, 0.5)' : 'rgba(245, 158, 11, 0.2)';
+  });
+}
+
+let agentRunning = false;
+const btnAgent = document.getElementById('btn-toggle-agent');
+if (btnAgent) {
+  btnAgent.addEventListener('click', () => {
+    if (!agentRunning) {
+      (window as any).qaHook.startAutonomousExplorer({ x: 15, y: 7, z: 15 });
+      btnAgent.textContent = '⏹️ Stop Speedrun';
+      btnAgent.style.background = 'rgba(239, 68, 68, 0.4)';
+      btnAgent.style.borderColor = '#ef4444';
+      btnAgent.style.color = '#ef4444';
+      agentRunning = true;
+    } else {
+      (window as any).qaHook.stopAutonomousExplorer();
+      btnAgent.textContent = '🤖 A* QA Speedrun';
+      btnAgent.style.background = 'rgba(56, 189, 248, 0.2)';
+      btnAgent.style.borderColor = '#38bdf8';
+      btnAgent.style.color = '#38bdf8';
+      agentRunning = false;
+    }
+  });
+}
+
 // ---------------------------------------------------------------------
 // 7. Main Animation Loop with 60FPS Physics & Particle Updates
 // ---------------------------------------------------------------------

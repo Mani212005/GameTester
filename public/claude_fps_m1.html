@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GameTester - FPS Build A</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { overflow: hidden; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0b0f1a; color: #f8fafc; user-select: none; }
+      #canvas-container { width: 100vw; height: 100vh; cursor: crosshair; }
+      #hud { position: absolute; top: 16px; left: 16px; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(16px); border: 1px solid rgba(239, 68, 68, 0.35); padding: 14px; border-radius: 12px; width: 340px; font-size: 13px; line-height: 1.4; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6); z-index: 20; }
+      #hud h1 { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 6px; }
+      .instruction-box { background: rgba(16, 185, 129, 0.15); border-left: 3px solid #10b981; padding: 6px 10px; border-radius: 4px; margin-top: 6px; font-size: 12px; color: #e2e8f0; }
+      .fps-state-preview { margin-top: 10px; background: #090d16; padding: 8px; border-radius: 6px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 10.5px; color: #f87171; max-height: 150px; overflow-y: auto; border: 1px solid rgba(239, 68, 68, 0.2); word-break: break-all; }
+      #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; pointer-events: none; z-index: 10; }
+      #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255, 255, 255, 0.95); box-shadow: 0 0 4px rgba(0, 0, 0, 0.9); }
+      #crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
+      #crosshair::after { top: 0; left: 7px; width: 2px; height: 16px; }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+    <div id="hud">
+      <h1>Tactical Action FPS</h1>
+      <div class="instruction-box"><strong>Click to play - WASD move, click to shoot, R reload</strong></div>
+      <div class="fps-state-preview">Booting scene...</div>
+    </div>
+    <script type="module">
+      import { bootFPSBaseline } from '/src/claude/fps_baseline.ts';
+      bootFPSBaseline({
+        container: document.getElementById('canvas-container'),
+        hudEl: document.getElementById('hud'),
+        neutralHud: true,
+      });
+    </script>
+  </body>
+</html>
