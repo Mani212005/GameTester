@@ -102,6 +102,13 @@ export class PlayerControls {
     const r = 0.35;
     const h = 1.7;
 
+    // Respawn & zero velocity if falling into void below Y = -30
+    if (this.position.y < -30) {
+      this.position.set(0, 10, 0);
+      this.velocity.set(0, 0, 0);
+      this.grounded = false;
+    }
+
     this.velocity.y -= this.gravity * dt;
     const move = this.velocity.clone().multiplyScalar(dt);
 

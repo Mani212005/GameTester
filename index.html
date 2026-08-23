@@ -594,6 +594,8 @@
       const iframeM1 = document.getElementById('iframe-m1');
       const iframeM2 = document.getElementById('iframe-m2');
       const gameSelector = document.getElementById('game-selector');
+      const btnM1 = document.getElementById('btn-select-m1');
+      const btnM2 = document.getElementById('btn-select-m2');
 
       function updatePhysics() {
         const gravity = parseFloat(document.getElementById('slider-gravity').value);
@@ -624,8 +626,8 @@
         iframeM2.src = isLeftGameTester ? cfg.m1Page : cfg.m2Page;
 
         // Reset Selection state
-        btnM1.classList.remove('selected-m1');
-        btnM2.classList.remove('selected-m2');
+        if (btnM1) btnM1.classList.remove('selected-m1');
+        if (btnM2) btnM2.classList.remove('selected-m2');
       }
 
       gameSelector.addEventListener('change', (e) => {
@@ -654,20 +656,21 @@
       });
 
       // Selection State
-      const btnM1 = document.getElementById('btn-select-m1');
-      const btnM2 = document.getElementById('btn-select-m2');
+      if (btnM1) {
+        btnM1.addEventListener('click', () => {
+          selectedMethod = 'm1';
+          btnM1.classList.add('selected-m1');
+          btnM2?.classList.remove('selected-m2');
+        });
+      }
 
-      btnM1.addEventListener('click', () => {
-        selectedMethod = 'm1';
-        btnM1.classList.add('selected-m1');
-        btnM2.classList.remove('selected-m2');
-      });
-
-      btnM2.addEventListener('click', () => {
-        selectedMethod = 'm2';
-        btnM2.classList.add('selected-m2');
-        btnM1.classList.remove('selected-m1');
-      });
+      if (btnM2) {
+        btnM2.addEventListener('click', () => {
+          selectedMethod = 'm2';
+          btnM2.classList.add('selected-m2');
+          btnM1?.classList.remove('selected-m1');
+        });
+      }
 
       // Reveal Action
       const modal = document.getElementById('modal');

@@ -266,6 +266,13 @@ export class QAHook {
   public toggleHeatmap(): boolean {
     return false;
   }
+
+  public destroy(): void {
+    this.activeInputs.clear();
+    if (typeof window !== 'undefined' && window.qaHook === this) {
+      delete (window as any).qaHook;
+    }
+  }
 }
 
 declare global {
