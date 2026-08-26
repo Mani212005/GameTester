@@ -6,7 +6,7 @@ This document details the complete end-to-end workflow of the GameTester platfor
 
 ## 1. System Overview & Core Architecture
 
-GameTester solves the critical latency, accuracy, and blindness bottlenecks of existing Vision-Language Model (VLM) game QA agents by replacing slow pixel-scraping loops with a zero-latency, deterministic **Entity-Component-System (ECS) Ground-Truth Observer Hook (`window.qaHook`)**.
+GameTester avoids per-frame VLM inference latency and sub-pixel visual ambiguity by decoupling simulation stepping from rendering and exposing an in-memory **Entity-Component-System (ECS) Ground-Truth Observer Hook (`window.qaHook`)**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -21,7 +21,7 @@ GameTester solves the critical latency, accuracy, and blindness bottlenecks of e
                                   ▼
  2. Headless ECS Observer Hook (window.qaHook)
     ├── State Extraction: Precise position, velocity, contacts, bounding boxes
-    ├── Deterministic Step Engine: Manual frame stepping (deltaMs=16.66ms)
+    ├── Fixed-Timestep Step Engine: Manual frame stepping (deltaMs=16.66ms)
     ├── Synthetic Input Injection: WASD, Jump, Mouse Look, Break/Place
     └── Invariant Assertion Engine: assertState(condition) for bug detection
                                   │

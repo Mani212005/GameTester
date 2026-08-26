@@ -321,30 +321,31 @@ const raycastHighlight = new THREE.LineSegments(outlineEdges, outlineMat);
 raycastHighlight.visible = false;
 scene.add(raycastHighlight);
 
-// ---------------------------------------------------------------------
-// 6. Deep window.qaHook Observer & Assertion Architecture
-// ---------------------------------------------------------------------
-const qaHookInstance = new MinecraftQAHook({
-  scene,
-  cannonWorld: null as any,
-  renderer,
-  camera,
-  voxelWorld,
-  controls,
-});
+// 6. Deep window.qaHook Observer & Assertion Architecture (dead-code eliminated in production)
+let qaHookInstance: MinecraftQAHook | null = null;
+if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true') {
+  qaHookInstance = new MinecraftQAHook({
+    scene,
+    cannonWorld: null as any,
+    renderer,
+    camera,
+    voxelWorld,
+    controls,
+  });
 
-// Extend qaHookInstance with Method 2 diagnostic metrics
-(qaHookInstance as any).getPhysicsMetrics = () => {
-  return {
-    solverIterations: 0,
-    activeBodies: 0,
-    particleCount: (particleManager as any).particles.length,
-    shadowMapEnabled: renderer.shadowMap.enabled,
-    fps: currentFps,
+  // Extend qaHookInstance with Method 2 diagnostic metrics
+  (qaHookInstance as any).getPhysicsMetrics = () => {
+    return {
+      solverIterations: 0,
+      activeBodies: 0,
+      particleCount: (particleManager as any).particles.length,
+      shadowMapEnabled: renderer.shadowMap.enabled,
+      fps: currentFps,
+    };
   };
-};
 
-(window as any).qaHook = qaHookInstance;
+  (window as any).qaHook = qaHookInstance;
+}
 
 // UI Hotbar & State Preview Updates
 const statePreviewEl = document.getElementById('state-preview');
@@ -461,7 +462,7 @@ function animate(now: number) {
   // Update particles
   particleManager.update(deltaSec);
 
-  if (!qaHookInstance.isManualMode()) {
+  if (!qaHookInstance || !qaHookInstance.isManualMode()) {
     controls.updateInputs();
     controls.stepPhysics(deltaSec); // 4 physics sub-steps for crisp high-FPS collision
     controls.updateCameraPosition();
@@ -469,7 +470,7 @@ function animate(now: number) {
   }
 
   // Live Observer Preview HUD
-  if (statePreviewEl) {
+  if (statePreviewEl && qaHookInstance) {
     const state: MinecraftSceneState = qaHookInstance.getSceneState();
     const player = state.playerState;
     const metrics = (qaHookInstance as any).getPhysicsMetrics();

@@ -49,6 +49,18 @@ export class VoxelWorld {
     this.rebuildWorld();
   }
 
+  public resetWorld(): void {
+    for (const chunk of this.chunks.values()) {
+      if (chunk.mesh) {
+        this.scene.remove(chunk.mesh);
+        chunk.mesh.geometry.dispose();
+      }
+    }
+    this.chunks.clear();
+    this.generateTerrain();
+    this.rebuildWorld();
+  }
+
   getChunk(cx: number, cz: number) {
     const key = `${cx},${cz}`;
     let chunk = this.chunks.get(key);

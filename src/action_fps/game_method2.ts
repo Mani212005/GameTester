@@ -3,8 +3,9 @@ import { FPSGame } from './FPSGame';
 const container = document.getElementById('canvas-container')!;
 const game = new FPSGame(container);
 
-// Expose complete window.qaHook for Action FPS Benchmark
-(window as any).qaHook = {
+// Expose complete window.qaHook for Action FPS Benchmark (gated in production)
+if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true') {
+  (window as any).qaHook = {
   isManualMode: () => false,
   getSceneState: () => game.getState(),
   step: (deltaMs: number = 16.666) => game.step(deltaMs),
@@ -23,6 +24,7 @@ const game = new FPSGame(container);
     game.spawnWave(1);
   },
 };
+}
 
 const hudAmmo = document.getElementById('hud-ammo');
 const hudScore = document.getElementById('hud-score');

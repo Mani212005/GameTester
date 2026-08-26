@@ -38,6 +38,7 @@ export interface PlayerState {
 }
 
 export interface SceneState {
+  hookVersion: string;
   timestamp: number;
   stepCount: number;
   entities: EntityState[];
@@ -80,6 +81,8 @@ export interface QAHookOptions {
 }
 
 export class QAHook {
+  public static readonly VERSION: string = '1.0.0';
+
   private scene: THREE.Scene;
   private world: CANNON.World;
   private renderer: THREE.WebGLRenderer;
@@ -201,6 +204,7 @@ export class QAHook {
     const playerVel = this.playerEntity.body.velocity;
 
     return {
+      hookVersion: QAHook.VERSION,
       timestamp: Date.now(),
       stepCount: this.stepCount,
       entities: entityStates,

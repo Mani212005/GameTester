@@ -50,14 +50,16 @@ export interface QAState {
 
 /** Minimal window.qaHook-shaped observer, shared by every Claude build. */
 export function installQAHook(getState: () => QAState, step: (deltaMs?: number) => QAState) {
-  (window as any).qaHook = {
-    getSceneState: getState,
-    step,
-    assertState: (fn: (s: QAState) => boolean | { pass: boolean; message: string }) => {
-      const s = getState();
-      const r = fn(s);
-      if (typeof r === 'boolean') return { pass: r, message: r ? 'ok' : 'failed', state: s };
-      return { ...r, state: s };
-    },
-  };
+  if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true' || import.meta.env.DEV) {
+    (window as any).qaHook = {
+      getSceneState: getState,
+      step,
+      assertState: (fn: (s: QAState) => boolean | { pass: boolean; message: string }) => {
+        const s = getState();
+        const r = fn(s);
+        if (typeof r === 'boolean') return { pass: r, message: r ? 'ok' : 'failed', state: s };
+        return { ...r, state: s };
+      },
+    };
+  }
 }

@@ -59,6 +59,7 @@ export interface VoxelWorldState {
 }
 
 export interface MinecraftSceneState {
+  hookVersion?: string;
   timestamp: number;
   stepCount: number;
   playerState: PlayerVoxelState;

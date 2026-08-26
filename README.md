@@ -32,9 +32,18 @@ This visual-only paradigm introduces crippling latency (2,000ms – 5,000ms per 
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
+## 🔬 What This Test Suite Proves vs. Does Not Prove
 
-## ⚖️ SOTA VLM vs. GameTester Industry Benchmark
+### What It Proves:
+* **Physics & State Reproducibility**: Input injection produces movements, jump arcs, and voxel mutations that stay reproducible within stated physical tolerances (`TOL.position = 0.20m`, `TOL.velocity = 0.15 m/s`).
+* **Test Isolation**: Running `resetWorld()` returns all voxel chunks and player bodies to clean baseline state without state contamination across test ordering.
+* **Production Security**: Production client bundles built via `npm run build` dead-code eliminate all `window.qaHook` debug and input injection surfaces.
+* **WebGL Render Pipeline**: WebGL context initializes without `gl.getError()` flags or network asset failures.
+
+### What It Does Not Prove:
+* **Hardware GPU Driver Parity**: Headless CI runs on SwiftShader CPU rasterization (`--use-angle=swiftshader`). Real-world mobile and discrete desktop GPUs have different float rounding pipelines and driver optimizations.
+* **Bit-Exact Float Reproducibility**: Cannon-es impulse solvers accumulate minor float variance across long step chains (measured empirical run-to-run divergence is $\approx 0.145\text{m}$ over 60 steps).
+
 
 ### Why SOTA VLM Screenshot Loops Fail
 

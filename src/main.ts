@@ -82,17 +82,20 @@ world.addBody(playerBody);
 // Player Controls
 const controls = new PlayerControls(camera, playerBody, voxelWorld, renderer.domElement);
 
-// 4. Initialize window.qaHook
-const qaHookInstance = new MinecraftQAHook({
-  scene,
-  cannonWorld: world,
-  renderer,
-  camera,
-  voxelWorld,
-  controls,
-});
+// 4. Initialize window.qaHook (gated in production)
+let qaHookInstance: MinecraftQAHook | null = null;
+if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true') {
+  qaHookInstance = new MinecraftQAHook({
+    scene,
+    cannonWorld: world,
+    renderer,
+    camera,
+    voxelWorld,
+    controls,
+  });
 
-(window as any).qaHook = qaHookInstance;
+  (window as any).qaHook = qaHookInstance;
+}
 
 // 5. UI Elements Update
 const statePreviewEl = document.getElementById('state-preview');
@@ -135,7 +138,7 @@ function animate(now: number) {
   const deltaMs = now - lastTime;
   lastTime = now;
 
-  if (!qaHookInstance.isManualMode()) {
+  if (!qaHookInstance || !qaHookInstance.isManualMode()) {
     controls.updateInputs();
     world.step(1 / 60, Math.min(deltaMs / 1000, 0.1), 3);
     controls.updateCameraPosition();
@@ -143,7 +146,7 @@ function animate(now: number) {
   }
 
   // Live HUD Preview
-  if (statePreviewEl) {
+  if (statePreviewEl && qaHookInstance) {
     const state = qaHookInstance.getSceneState();
     const player = state.playerState;
     const targetBlockStr = player.lookingAt.hit

@@ -115,6 +115,7 @@ export class MinecraftQAHook {
 
   public getSceneState(): MinecraftSceneState {
     return {
+      hookVersion: '1.0.0',
       timestamp: Date.now(),
       stepCount: this.stepCount,
       playerState: this.controls.getPlayerState(),
@@ -148,6 +149,14 @@ export class MinecraftQAHook {
 
   public setPlayerLookAt(yaw: number, pitch: number): void {
     this.controls.setLookAt(yaw, pitch);
+  }
+
+  public resetWorld(): void {
+    this.activeInputs.clear();
+    this.stepCount = 0;
+    this.voxelWorld.resetWorld();
+    this.resetPlayer({ x: 0, y: 7, z: 0 });
+    this.controls.updateInputs(new Set());
   }
 
   public resetPlayer(pos?: { x: number; y: number; z: number }): void {
