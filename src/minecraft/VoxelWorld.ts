@@ -35,6 +35,8 @@ export class VoxelWorld {
   public minY = 0;
   public maxY = 31;
 
+  public seed: number = 1337;
+
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.atlas = createTextureAtlas();
@@ -45,11 +47,14 @@ export class VoxelWorld {
       alphaTest: 0.1
     });
 
-    this.generateTerrain();
+    this.generateTerrain(this.seed);
     this.rebuildWorld();
   }
 
-  public resetWorld(): void {
+  public resetWorld(seed?: number): void {
+    if (typeof seed === 'number') {
+      this.seed = seed;
+    }
     for (const chunk of this.chunks.values()) {
       if (chunk.mesh) {
         this.scene.remove(chunk.mesh);
@@ -57,7 +62,7 @@ export class VoxelWorld {
       }
     }
     this.chunks.clear();
-    this.generateTerrain();
+    this.generateTerrain(this.seed);
     this.rebuildWorld();
   }
 
@@ -102,10 +107,10 @@ export class VoxelWorld {
     return true;
   }
 
-  private generateTerrain(): void {
+  public generateTerrain(seed: number = 1337): void {
     for (let x = this.minX; x <= this.maxX; x++) {
       for (let z = this.minZ; z <= this.maxZ; z++) {
-        const heightOffset = Math.floor(Math.sin(x * 0.3) * Math.cos(z * 0.3) * 1.5);
+        const heightOffset = Math.floor(Math.sin((x + seed) * 0.3) * Math.cos((z + seed) * 0.3) * 1.5);
         const surfaceY = 6 + heightOffset;
 
         for (let y = this.minY; y <= surfaceY; y++) {

@@ -101,6 +101,18 @@ class ParticleManager {
     this.scene = scene;
   }
 
+  public clear(): void {
+    for (const p of this.particles) {
+      this.scene.remove(p.mesh);
+      p.mesh.geometry.dispose();
+    }
+    this.particles = [];
+  }
+
+  public getParticleCount(): number {
+    return this.particles.length;
+  }
+
   public spawnBlockDebris(pos: THREE.Vector3, colorHex: number) {
     const pMaterial = new THREE.MeshStandardMaterial({
       color: colorHex,
@@ -331,6 +343,7 @@ if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true') {
     camera,
     voxelWorld,
     controls,
+    particleManager,
   });
 
   // Extend qaHookInstance with Method 2 diagnostic metrics
@@ -344,6 +357,7 @@ if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true') {
     };
   };
 
+  (qaHookInstance as any).getParticleCount = () => particleManager.getParticleCount();
   (window as any).qaHook = qaHookInstance;
 }
 

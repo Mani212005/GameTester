@@ -28,6 +28,7 @@ export class MinecraftQAHook implements Observable {
   private camera: THREE.PerspectiveCamera;
   private voxelWorld: VoxelWorld;
   private controls: PlayerControls;
+  private particleManager?: any;
 
   private manualMode: boolean = false;
   private stepCount: number = 0;
@@ -43,6 +44,7 @@ export class MinecraftQAHook implements Observable {
     camera: THREE.PerspectiveCamera;
     voxelWorld: VoxelWorld;
     controls: PlayerControls;
+    particleManager?: any;
   }) {
     this.scene = options.scene;
     this.cannonWorld = options.cannonWorld;
@@ -50,6 +52,7 @@ export class MinecraftQAHook implements Observable {
     this.camera = options.camera;
     this.voxelWorld = options.voxelWorld;
     this.controls = options.controls;
+    this.particleManager = options.particleManager;
 
     this.navMeshAgent = new NavMeshAgent(this);
     this.heatmapGenerator = new HeatmapGenerator(this.scene);
@@ -107,6 +110,11 @@ export class MinecraftQAHook implements Observable {
     this.controls.stepPhysics(deltaSeconds);
     this.controls.updateCameraPosition();
 
+    // Update particles in manual step mode to ensure clean disposal
+    if (this.particleManager && typeof this.particleManager.update === 'function') {
+      this.particleManager.update(deltaSeconds);
+    }
+
     // Record telemetry if player is colliding
     const pos = this.controls.getPlayerState().position;
     if (this.controls.isGrounded() === false && Math.abs(this.controls.velocity.x) > 0.1) {
@@ -157,16 +165,19 @@ export class MinecraftQAHook implements Observable {
     this.controls.setLookAt(yaw, pitch);
   }
 
-  public resetWorld(): void {
+  public resetWorld(seed?: number): void {
     this.activeInputs.clear();
     this.stepCount = 0;
-    this.voxelWorld.resetWorld();
-    this.resetPlayer({ x: 0, y: 7, z: 0 });
+    this.voxelWorld.resetWorld(seed);
+    this.resetPlayer({ x: 0, y: 6.0, z: 0 });
     this.controls.updateInputs(new Set());
+    if (this.particleManager && typeof this.particleManager.clear === 'function') {
+      this.particleManager.clear();
+    }
   }
 
   public resetPlayer(pos?: { x: number; y: number; z: number }): void {
-    const target = pos || { x: 0, y: 7, z: 0 };
+    const target = pos || { x: 0, y: 6.0, z: 0 };
     this.controls.position.set(target.x, target.y, target.z);
     this.controls.velocity.set(0, 0, 0);
     if ((this.controls as any).currentVel) {
@@ -226,5 +237,13 @@ export class MinecraftQAHook implements Observable {
 
   public recordDefect(x: number, y: number, z: number, severity: number = 0.5): void {
     this.heatmapGenerator.addPoint(x, y, z, severity);
+  }
+
+  public destroy(): void {
+    this.activeInputs.clear();
+    this.stopAutonomousExplorer();
+    if (typeof window !== 'undefined' && (window as any).qaHook === this) {
+      delete (window as any).qaHook;
+    }
   }
 }
