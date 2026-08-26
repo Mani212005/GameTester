@@ -19,11 +19,11 @@ async function runTestSuite() {
   console.log('[1/4] Starting Vite dev server in background...');
   const server = await createServer({
     root: rootDir,
-    server: { port: 3100, strictPort: true },
+    server: { port: 3105, strictPort: false },
     logLevel: 'silent',
   });
   await server.listen();
-  const serverUrl = 'http://localhost:3100';
+  const serverUrl = `http://localhost:${server.config.server.port || 3105}`;
   console.log(`[Vite] Server listening at ${serverUrl}`);
 
   // 2. Launch Playwright Chromium Headless

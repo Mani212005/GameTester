@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GameTester - Unbiased Multi-Game Benchmark Suite</title>
+    <title>GameTester — Double-Blind 3D Engine Evaluation Arena</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,15 +12,16 @@
     />
     <style>
       :root {
-        --bg-dark: #090d16;
-        --card-bg: rgba(15, 23, 42, 0.85);
-        --border-color: rgba(255, 255, 255, 0.12);
-        --primary-blue: #38bdf8;
-        --primary-purple: #8b5cf6;
-        --accent-green: #10b981;
-        --accent-amber: #f59e0b;
-        --text-main: #f8fafc;
-        --text-muted: #94a3b8;
+        --bg-dark: #07090E;
+        --card-bg: rgba(13, 18, 30, 0.85);
+        --border-subtle: rgba(255, 255, 255, 0.08);
+        --border-active: rgba(56, 189, 248, 0.4);
+        --primary-blue: #38BDF8;
+        --primary-indigo: #6366F1;
+        --accent-emerald: #10B981;
+        --accent-amber: #F59E0B;
+        --text-main: #F8FAFC;
+        --text-muted: #94A3B8;
       }
 
       * {
@@ -41,10 +42,10 @@
 
       /* Header Bar */
       header {
-        height: 60px;
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--border-color);
+        height: 64px;
+        background: rgba(13, 18, 30, 0.95);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border-subtle);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -58,116 +59,177 @@
         gap: 16px;
       }
 
-      .logo-badge {
-        background: linear-gradient(135deg, #0284c7, #6366f1);
-        padding: 6px 12px;
-        border-radius: 8px;
+      .brand-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, rgba(2, 132, 199, 0.2), rgba(99, 102, 241, 0.2));
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        padding: 6px 14px;
+        border-radius: 10px;
         font-weight: 800;
-        font-size: 14px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+        font-size: 13px;
+        letter-spacing: 0.8px;
+        color: var(--text-main);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
       }
 
       .game-selector-container {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+      }
+
+      .select-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
       }
 
       .game-select-dropdown {
-        background: rgba(30, 41, 59, 0.9);
-        border: 1px solid var(--primary-blue);
+        background: #131B2E;
+        border: 1px solid var(--border-subtle);
         color: var(--text-main);
-        padding: 8px 14px;
+        padding: 8px 36px 8px 14px;
         border-radius: 8px;
-        font-weight: 700;
-        font-size: 14px;
+        font-weight: 600;
+        font-size: 13px;
         cursor: pointer;
         outline: none;
-        box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        appearance: none;
         transition: all 0.2s ease;
       }
 
-      .game-select-dropdown:hover {
-        background: rgba(56, 189, 248, 0.15);
-        box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+      .game-select-dropdown:hover, .game-select-dropdown:focus {
+        border-color: var(--primary-blue);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+      }
+
+      .select-icon {
+        position: absolute;
+        right: 12px;
+        pointer-events: none;
+        color: var(--text-muted);
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .btn-shuffle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-shuffle:hover {
+        color: var(--text-main);
+        border-color: var(--border-active);
+        background: rgba(56, 189, 248, 0.1);
       }
 
       .status-pill {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: rgba(16, 185, 129, 0.15);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        padding: 4px 12px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        padding: 5px 14px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
-        color: var(--accent-green);
+        color: var(--accent-emerald);
       }
 
       .status-dot {
         width: 8px;
         height: 8px;
-        background: var(--accent-green);
+        background: var(--accent-emerald);
         border-radius: 50%;
-        box-shadow: 0 0 8px var(--accent-green);
+        box-shadow: 0 0 8px var(--accent-emerald);
         animation: pulse 2s infinite;
       }
 
       @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.85); }
       }
 
-      /* Main Dual Iframe Layout */
+      /* Main Dual Viewport Arena */
       .main-container {
         flex: 1;
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        padding: 12px;
+        gap: 14px;
+        padding: 14px;
         position: relative;
+        min-height: 0;
       }
 
       .game-card {
         background: var(--card-bg);
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        border: 1px solid var(--border-subtle);
         display: flex;
         flex-direction: column;
         overflow: hidden;
         position: relative;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        transition: border-color 0.2s ease;
+      }
+
+      .game-card:hover {
+        border-color: rgba(255, 255, 255, 0.2);
       }
 
       .game-card-header {
-        height: 40px;
-        background: rgba(30, 41, 59, 0.8);
+        height: 44px;
+        background: rgba(19, 27, 46, 0.9);
         padding: 0 16px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-subtle);
       }
 
-      .game-tag {
+      .candidate-tag {
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
         letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .game-tag.m1 { color: var(--primary-blue); }
-      .game-tag.m2 { color: var(--primary-purple); }
+      .candidate-tag.alpha { color: var(--primary-blue); }
+      .candidate-tag.beta { color: #A78BFA; }
+
+      .hint-badge {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
 
       .iframe-wrapper {
         flex: 1;
         position: relative;
         width: 100%;
         height: 100%;
+        background: #000;
       }
 
       iframe {
@@ -176,12 +238,12 @@
         border: none;
       }
 
-      /* Bottom Rating & Judge Panel */
+      /* Bottom Evaluation & Judge Panel */
       .judge-panel {
-        background: rgba(15, 23, 42, 0.95);
-        backdrop-filter: blur(16px);
-        border-top: 1px solid var(--border-color);
-        padding: 16px 24px;
+        background: rgba(13, 18, 30, 0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border-subtle);
+        padding: 14px 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -191,22 +253,22 @@
 
       .rating-grid {
         display: flex;
-        gap: 32px;
+        gap: 28px;
         align-items: center;
       }
 
       .rating-category {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
       }
 
       .category-label {
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 11px;
+        font-weight: 700;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.6px;
       }
 
       .stars {
@@ -215,18 +277,19 @@
         cursor: pointer;
       }
 
-      .star {
-        font-size: 18px;
-        color: #475569;
+      .star-icon {
+        width: 18px;
+        height: 18px;
+        color: #334155;
         transition: color 0.15s ease, transform 0.15s ease;
       }
 
-      .star.active, .star:hover {
+      .star-icon.active, .star-icon:hover {
         color: var(--accent-amber);
         transform: scale(1.15);
       }
 
-      /* Guess Selector Group */
+      /* Candidate Choice Selector */
       .guess-section {
         display: flex;
         flex-direction: column;
@@ -235,50 +298,62 @@
 
       .guess-options {
         display: flex;
-        gap: 12px;
+        gap: 10px;
       }
 
       .guess-btn {
-        background: rgba(30, 41, 59, 0.9);
-        border: 2px solid var(--border-color);
+        background: #131B2E;
+        border: 1px solid var(--border-subtle);
         color: var(--text-main);
-        padding: 10px 20px;
+        padding: 9px 18px;
         border-radius: 8px;
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         transition: all 0.2s ease;
       }
 
-      .guess-btn.selected-m1 {
-        border-color: var(--primary-blue);
-        background: rgba(56, 189, 248, 0.2);
-        box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+      .guess-btn:hover {
+        border-color: rgba(255, 255, 255, 0.3);
       }
 
-      .guess-btn.selected-m2 {
-        border-color: var(--primary-purple);
-        background: rgba(139, 92, 246, 0.2);
-        box-shadow: 0 0 14px rgba(139, 92, 246, 0.4);
+      .guess-btn.selected-alpha {
+        border-color: var(--primary-blue);
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--primary-blue);
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+      }
+
+      .guess-btn.selected-beta {
+        border-color: #A78BFA;
+        background: rgba(167, 139, 250, 0.15);
+        color: #A78BFA;
+        box-shadow: 0 0 14px rgba(167, 139, 250, 0.35);
       }
 
       .reveal-btn {
-        background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, #10B981, #059669);
         color: white;
         font-weight: 800;
-        font-size: 15px;
-        padding: 14px 28px;
+        font-size: 13px;
+        padding: 12px 24px;
         border: none;
         border-radius: 10px;
         cursor: pointer;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+        letter-spacing: 0.6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
       .reveal-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
+        box-shadow: 0 6px 24px rgba(16, 185, 129, 0.55);
       }
 
       /* Reveal Modal Overlay */
@@ -289,7 +364,7 @@
         width: 100vw;
         height: 100vh;
         background: rgba(0, 0, 0, 0.88);
-        backdrop-filter: blur(14px);
+        backdrop-filter: blur(16px);
         display: none;
         align-items: center;
         justify-content: center;
@@ -298,19 +373,19 @@
 
       .modal-overlay.active {
         display: flex;
-        animation: fadeIn 0.3s ease;
+        animation: fadeIn 0.25s ease;
       }
 
       @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.95); }
+        from { opacity: 0; transform: scale(0.96); }
         to { opacity: 1; transform: scale(1); }
       }
 
       .reveal-card {
-        background: #0f172a;
+        background: #0D1322;
         border: 1px solid rgba(56, 189, 248, 0.3);
-        border-radius: 16px;
-        width: 850px;
+        border-radius: 18px;
+        width: 880px;
         max-width: 92vw;
         padding: 32px;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
@@ -321,14 +396,22 @@
         position: absolute;
         top: 20px;
         right: 20px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
         border: none;
         color: var(--text-muted);
         width: 32px;
         height: 32px;
         border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        font-size: 18px;
+        transition: all 0.2s ease;
+      }
+
+      .close-modal:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
       }
 
       .reveal-header {
@@ -337,168 +420,256 @@
       }
 
       .reveal-header h2 {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 800;
-        color: var(--primary-blue);
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
       }
 
       .result-banner {
         border-radius: 12px;
-        padding: 18px;
+        padding: 16px 20px;
         text-align: center;
-        font-weight: 800;
-        font-size: 18px;
-        margin-bottom: 24px;
-        line-height: 1.4;
+        font-weight: 700;
+        font-size: 15px;
+        margin-bottom: 20px;
+        line-height: 1.5;
       }
 
       .result-banner.win {
-        background: rgba(16, 185, 129, 0.15);
-        border: 2px solid var(--accent-green);
-        color: var(--accent-green);
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid var(--accent-emerald);
+        color: #34D399;
       }
 
       .result-banner.info {
-        background: rgba(56, 189, 248, 0.15);
-        border: 2px solid var(--primary-blue);
-        color: var(--primary-blue);
+        background: rgba(56, 189, 248, 0.12);
+        border: 1px solid var(--primary-blue);
+        color: #7DD3FC;
       }
 
       .comparison-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 16px;
+        margin-top: 12px;
         font-size: 13px;
       }
 
       .comparison-table th, .comparison-table td {
         padding: 12px 16px;
         text-align: left;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-subtle);
       }
 
       .comparison-table th {
-        background: rgba(30, 41, 59, 0.85);
+        background: #131B2E;
         color: var(--text-muted);
         text-transform: uppercase;
-        font-size: 12px;
-        letter-spacing: 0.5px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
       }
 
       .comparison-table td.highlight {
-        color: var(--accent-green);
+        color: #34D399;
         font-weight: 700;
       }
     </style>
   </head>
   <body>
+    <!-- Top Navigation Header -->
     <header>
       <div class="logo-group">
-        <span class="logo-badge">GAMETESTER</span>
-        <div class="game-selector-container">
-          <select id="game-selector" class="game-select-dropdown">
-            <option value="minecraft">🌲 3D Minecraft Voxel Sandbox</option>
-            <option value="fps">🎯 3D Tactical Action FPS</option>
-            <option value="lotr">🧙‍♂️ 3D Shire LOTR Environment</option>
-          </select>
+        <div class="brand-badge">
+          <!-- Gamepad SVG -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary-blue">
+            <line x1="6" y1="12" x2="10" y2="12"></line>
+            <line x1="8" y1="10" x2="8" y2="14"></line>
+            <line x1="15" y1="13" x2="15.01" y2="13"></line>
+            <line x1="18" y1="11" x2="18.01" y2="11"></line>
+            <rect x="2" y="6" width="20" height="12" rx="6"></rect>
+          </svg>
+          <span>GAMETESTER</span>
         </div>
-        <div style="display: flex; gap: 12px; margin-left: 20px; font-size: 12px; align-items: center;">
-          <label>Gravity: <input type="range" id="slider-gravity" min="5" max="40" value="20" style="width: 60px;" oninput="updatePhysics()"></label>
-          <label>Friction: <input type="range" id="slider-friction" min="0" max="1" step="0.05" value="0.1" style="width: 60px;" oninput="updatePhysics()"></label>
-          <label>Jump: <input type="range" id="slider-jump" min="3" max="15" value="6.5" step="0.5" style="width: 60px;" oninput="updatePhysics()"></label>
+
+        <!-- Multi-Game Selector Dropdown -->
+        <div class="game-selector-container">
+          <div class="select-wrapper">
+            <select id="game-selector" class="game-select-dropdown">
+              <option value="minecraft">3D Minecraft Voxel Sandbox</option>
+              <option value="fps">3D Tactical Action FPS</option>
+              <option value="lotr">3D Shire Environment</option>
+            </select>
+            <!-- Chevron Down SVG -->
+            <svg class="select-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+
+          <button id="btn-shuffle" class="btn-shuffle" title="Randomize Candidate Alpha / Beta assignments">
+            <!-- Shuffle SVG -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+            <span>Shuffle Slots</span>
+          </button>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button id="btn-toggle-dashboard-heatmap" style="background: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #f59e0b; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">🔥 Toggle 3D Heatmap</button>
+
+      <div class="header-actions">
         <div class="status-pill">
           <span class="status-dot"></span>
-          <span>Double-Blind Active · Zero Bias</span>
+          <span>Double-Blind Active · Anonymized Evaluation</span>
         </div>
       </div>
     </header>
 
+    <!-- Main Dual Viewports -->
     <div class="main-container">
-      <!-- Method 1 Card -->
+      <!-- Candidate Alpha Card -->
       <div class="game-card">
         <div class="game-card-header">
-          <span class="game-tag m1">🎮 METHOD 1</span>
-          <span style="font-size: 12px; color: var(--text-muted);">Click frame to play</span>
+          <span class="candidate-tag alpha">
+            <!-- Terminal / Code SVG -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>Candidate Alpha</span>
+          </span>
+          <span class="hint-badge">
+            <!-- Mouse pointer SVG -->
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+              <path d="m13 13 6 6"></path>
+            </svg>
+            Click frame to play
+          </span>
         </div>
         <div class="iframe-wrapper">
-          <iframe id="iframe-m1"></iframe>
+          <iframe id="iframe-alpha"></iframe>
         </div>
       </div>
 
-      <!-- Method 2 Card -->
+      <!-- Candidate Beta Card -->
       <div class="game-card">
         <div class="game-card-header">
-          <span class="game-tag m2">🕹️ METHOD 2</span>
-          <span style="font-size: 12px; color: var(--text-muted);">Click frame to play</span>
+          <span class="candidate-tag beta">
+            <!-- Terminal / Code SVG -->
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>Candidate Beta</span>
+          </span>
+          <span class="hint-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
+              <path d="m13 13 6 6"></path>
+            </svg>
+            Click frame to play
+          </span>
         </div>
         <div class="iframe-wrapper">
-          <iframe id="iframe-m2"></iframe>
+          <iframe id="iframe-beta"></iframe>
         </div>
       </div>
     </div>
 
-    <!-- Captain's Supreme Judge Rating Panel -->
+    <!-- Judge Evaluation Panel -->
     <div class="judge-panel">
       <div class="rating-grid">
         <!-- Physics Smoothness -->
         <div class="rating-category">
-          <span class="category-label">Movement & Physics</span>
+          <span class="category-label">Movement & Controls</span>
           <div class="stars" data-category="physics">
-            <span class="star" data-val="1">★</span>
-            <span class="star" data-val="2">★</span>
-            <span class="star" data-val="3">★</span>
-            <span class="star" data-val="4">★</span>
-            <span class="star" data-val="5">★</span>
+            <svg class="star-icon" data-val="1" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
         </div>
 
-        <!-- Visual Lighting Quality -->
+        <!-- Graphics & Shadows Quality -->
         <div class="rating-category">
-          <span class="category-label">Graphics & Shadows</span>
+          <span class="category-label">Visuals & Lighting</span>
           <div class="stars" data-category="graphics">
-            <span class="star" data-val="1">★</span>
-            <span class="star" data-val="2">★</span>
-            <span class="star" data-val="3">★</span>
-            <span class="star" data-val="4">★</span>
-            <span class="star" data-val="5">★</span>
+            <svg class="star-icon" data-val="1" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
         </div>
 
-        <!-- Overall Experience -->
+        <!-- Overall Gameplay -->
         <div class="rating-category">
           <span class="category-label">Overall Experience</span>
           <div class="stars" data-category="overall">
-            <span class="star" data-val="1">★</span>
-            <span class="star" data-val="2">★</span>
-            <span class="star" data-val="3">★</span>
-            <span class="star" data-val="4">★</span>
-            <span class="star" data-val="5">★</span>
+            <svg class="star-icon" data-val="1" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-icon" data-val="5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           </div>
         </div>
       </div>
 
-      <!-- Captain's Blind Selection -->
+      <!-- Blind Candidate Vote Selector -->
       <div class="guess-section">
-        <span class="category-label">Which version feels better to play?</span>
+        <span class="category-label">Which candidate feels superior to play?</span>
         <div class="guess-options">
-          <button class="guess-btn" id="btn-select-m1">Method 1 (Left)</button>
-          <button class="guess-btn" id="btn-select-m2">Method 2 (Right)</button>
+          <button class="guess-btn" id="btn-select-alpha">
+            <span>Vote Candidate Alpha</span>
+          </button>
+          <button class="guess-btn" id="btn-select-beta">
+            <span>Vote Candidate Beta</span>
+          </button>
         </div>
       </div>
 
-      <button class="reveal-btn" id="btn-reveal">🏆 REVEAL WINNER</button>
+      <button class="reveal-btn" id="btn-reveal">
+        <!-- Award Trophy SVG -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+          <path d="M4 22h16"></path>
+          <path d="M10 14.66V17c0 .55-.45 1-1 1H7v2h10v-2h-2c-.55 0-1-.45-1-1v-2.34"></path>
+          <path d="M6 4h12v7a6 6 0 0 1-12 0V4Z"></path>
+        </svg>
+        <span>REVEAL BENCHMARK</span>
+      </button>
     </div>
 
-    <!-- Reveal Modal -->
+    <!-- Reveal Diagnostic Modal -->
     <div class="modal-overlay" id="modal">
       <div class="reveal-card">
-        <button class="close-modal" id="btn-close">&times;</button>
+        <button class="close-modal" id="btn-close" title="Close modal">
+          <!-- X close SVG -->
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
         <div class="reveal-header">
-          <h2 id="modal-title">Double-Blind Benchmark Results Revealed</h2>
+          <h2 id="modal-title">
+            <!-- Shield Check SVG -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            Double-Blind Benchmark Results Revealed
+          </h2>
         </div>
 
         <div class="result-banner" id="result-banner">
@@ -509,8 +680,8 @@
           <thead>
             <tr>
               <th>Feature / Metric</th>
-              <th id="th-m1">Method 1 (Left)</th>
-              <th id="th-m2">Method 2 (Right)</th>
+              <th id="th-alpha">Candidate Alpha</th>
+              <th id="th-beta">Candidate Beta</th>
             </tr>
           </thead>
           <tbody id="table-body">
@@ -527,20 +698,20 @@
           m1Page: '/game_method1.html',
           m2Page: '/game_method2.html',
           gtDetails: {
-            arch: 'OUR METHOD (GameTester window.qaHook)',
-            phys: 'Fluid acceleration & friction inertia (Cannon-es 60FPS)',
+            arch: 'GameTester (Headless ECS window.qaHook)',
+            phys: 'Fluid acceleration & friction inertia (Cannon-es 60 FPS)',
             part: '18-part debris explosion particles',
             aud: 'Synthesized Web Audio place/break sounds',
             ray: 'Realtime voxel wireframe outline',
-            light: 'PCFSoft 2048 map + Hemisphere AO'
+            light: 'PCFSoft 2048 shadow map + Hemisphere AO'
           },
           sotaDetails: {
-            arch: 'EXISTING METHOD (SOTA VLM Baseline)',
-            phys: 'Instant impulse response',
-            part: 'Static voxel removal',
-            aud: 'None',
-            ray: 'Implicit sight vector',
-            light: 'Flat ambient + directional light'
+            arch: 'Baseline Architecture (Vision-Only Frame Pipeline)',
+            phys: 'Instant rigid impulse response',
+            part: 'Static block removal',
+            aud: 'None (Muted)',
+            ray: 'Implicit camera sight ray',
+            light: 'Flat directional lighting'
           }
         },
         fps: {
@@ -548,39 +719,39 @@
           m1Page: '/fps_method1.html',
           m2Page: '/fps_method2.html',
           gtDetails: {
-            arch: 'OUR METHOD (GameTester window.qaHook)',
-            phys: 'Cannon-es 60FPS rigid body + WASD physics',
+            arch: 'GameTester (Headless ECS window.qaHook)',
+            phys: 'Cannon-es 60 FPS rigid body + WASD physics',
             part: 'Web Audio gunshot + 3.5x PointLight muzzle flash & 16-spark physics',
             aud: 'Synthesized tactical gunshot sound FX',
             ray: 'Precision raycast hit detection & HP damage',
             light: 'Red/Blue tactical spot lighting + shadow maps'
           },
           sotaDetails: {
-            arch: 'EXISTING METHOD (SOTA VLM Baseline)',
-            phys: '2D Screen-space vectoring',
+            arch: 'Baseline Architecture (Vision-Only Frame Pipeline)',
+            phys: 'Screen-space step movement',
             part: 'Static frame overlay',
-            aud: 'None',
+            aud: 'None (Muted)',
             ray: 'Bounding box approximation',
-            light: 'Flat directional light'
+            light: 'Flat ambient light'
           }
         },
         lotr: {
-          name: '3D Shire LOTR Environment',
+          name: '3D Shire Environment',
           m1Page: '/lotr_method1.html',
           m2Page: '/lotr_method2.html',
           gtDetails: {
-            arch: 'OUR METHOD (GameTester window.qaHook)',
-            phys: 'Procedural 120-segment rolling green hills & path curve',
+            arch: 'GameTester (Headless ECS window.qaHook)',
+            phys: 'Procedural 120-segment rolling hills & curved paths',
             part: '9 glowing point light lanterns + 80 floating fireflies',
             aud: 'Ambient Shire lighting atmosphere',
             ray: 'Precision round green door & brass knob geometry',
             light: 'Golden hour sunlight + Hemisphere grass bounce'
           },
           sotaDetails: {
-            arch: 'EXISTING METHOD (SOTA VLM Baseline)',
+            arch: 'Baseline Architecture (Vision-Only Frame Pipeline)',
             phys: 'Static terrain plane',
             part: 'Unlit lantern meshes',
-            aud: 'None',
+            aud: 'None (Muted)',
             ray: 'Approximate 3D bounding box',
             light: 'Flat ambient lighting'
           }
@@ -588,60 +759,42 @@
       };
 
       let currentGame = 'minecraft';
-      let isLeftGameTester = Math.random() < 0.5;
-      let selectedMethod = null;
+      let isAlphaGameTester = Math.random() < 0.5;
+      let selectedCandidate = null;
 
-      const iframeM1 = document.getElementById('iframe-m1');
-      const iframeM2 = document.getElementById('iframe-m2');
+      const iframeAlpha = document.getElementById('iframe-alpha');
+      const iframeBeta = document.getElementById('iframe-beta');
       const gameSelector = document.getElementById('game-selector');
-      const btnM1 = document.getElementById('btn-select-m1');
-      const btnM2 = document.getElementById('btn-select-m2');
-
-      function updatePhysics() {
-        const gravity = parseFloat(document.getElementById('slider-gravity').value);
-        const friction = parseFloat(document.getElementById('slider-friction').value);
-        const jump = parseFloat(document.getElementById('slider-jump').value);
-
-        const data = { type: 'UPDATE_PHYSICS', gravity, friction, jumpPower: jump };
-        iframeM1.contentWindow.postMessage(data, '*');
-        iframeM2.contentWindow.postMessage(data, '*');
-      }
-
-      const btnDashboardHeatmap = document.getElementById('btn-toggle-dashboard-heatmap');
-      if (btnDashboardHeatmap) {
-        btnDashboardHeatmap.addEventListener('click', () => {
-          const data = { type: 'TOGGLE_HEATMAP' };
-          if (iframeM1.contentWindow) iframeM1.contentWindow.postMessage(data, '*');
-          if (iframeM2.contentWindow) iframeM2.contentWindow.postMessage(data, '*');
-        });
-      }
+      const btnShuffle = document.getElementById('btn-shuffle');
 
       function loadGameBenchmark(gameKey) {
         currentGame = gameKey;
-        isLeftGameTester = Math.random() < 0.5; // Re-shuffle double-blind order
-        selectedMethod = null;
+        isAlphaGameTester = Math.random() < 0.5;
+        selectedCandidate = null;
 
         const cfg = gameConfigs[gameKey];
-        iframeM1.src = isLeftGameTester ? cfg.m2Page : cfg.m1Page;
-        iframeM2.src = isLeftGameTester ? cfg.m1Page : cfg.m2Page;
+        iframeAlpha.src = isAlphaGameTester ? cfg.m2Page : cfg.m1Page;
+        iframeBeta.src = isAlphaGameTester ? cfg.m1Page : cfg.m2Page;
 
-        // Reset Selection state
-        if (btnM1) btnM1.classList.remove('selected-m1');
-        if (btnM2) btnM2.classList.remove('selected-m2');
+        btnAlpha.classList.remove('selected-alpha');
+        btnBeta.classList.remove('selected-beta');
       }
 
       gameSelector.addEventListener('change', (e) => {
         loadGameBenchmark(e.target.value);
       });
 
-      // Initial Load
+      btnShuffle.addEventListener('click', () => {
+        loadGameBenchmark(currentGame);
+      });
+
       loadGameBenchmark('minecraft');
 
-      // Ratings setup
+      // Star rating interaction
       const ratings = { physics: 0, graphics: 0, overall: 0 };
       document.querySelectorAll('.stars').forEach((starContainer) => {
         const cat = starContainer.getAttribute('data-category');
-        const stars = starContainer.querySelectorAll('.star');
+        const stars = starContainer.querySelectorAll('.star-icon');
 
         stars.forEach((star) => {
           star.addEventListener('click', () => {
@@ -655,84 +808,81 @@
         });
       });
 
-      // Selection State
-      if (btnM1) {
-        btnM1.addEventListener('click', () => {
-          selectedMethod = 'm1';
-          btnM1.classList.add('selected-m1');
-          btnM2?.classList.remove('selected-m2');
-        });
-      }
+      const btnAlpha = document.getElementById('btn-select-alpha');
+      const btnBeta = document.getElementById('btn-select-beta');
 
-      if (btnM2) {
-        btnM2.addEventListener('click', () => {
-          selectedMethod = 'm2';
-          btnM2.classList.add('selected-m2');
-          btnM1?.classList.remove('selected-m1');
-        });
-      }
+      btnAlpha.addEventListener('click', () => {
+        selectedCandidate = 'alpha';
+        btnAlpha.classList.add('selected-alpha');
+        btnBeta.classList.remove('selected-beta');
+      });
 
-      // Reveal Action
+      btnBeta.addEventListener('click', () => {
+        selectedCandidate = 'beta';
+        btnBeta.classList.add('selected-beta');
+        btnAlpha.classList.remove('selected-alpha');
+      });
+
       const modal = document.getElementById('modal');
       const resultBanner = document.getElementById('result-banner');
       const tableBody = document.getElementById('table-body');
 
       document.getElementById('btn-reveal').addEventListener('click', () => {
-        const winnerSide = isLeftGameTester ? 'm1' : 'm2';
-        const winnerName = isLeftGameTester ? 'Method 1 (Left Window)' : 'Method 2 (Right Window)';
+        const winnerSide = isAlphaGameTester ? 'alpha' : 'beta';
+        const winnerName = isAlphaGameTester ? 'Candidate Alpha (Left Viewport)' : 'Candidate Beta (Right Viewport)';
 
         let bannerText = '';
-        if (selectedMethod === winnerSide) {
-          bannerText = `🏆 SPOT ON CAPTAIN! THE WINNER IS OUR METHOD (GameTester)!\nYou selected ${winnerName}, which was secretly powered by our GameTester engine.`;
+        if (selectedCandidate === winnerSide) {
+          bannerText = `Spot on! The winner is our GameTester engine!\nYou selected ${winnerName}, which was secretly powered by GameTester Headless ECS.`;
           resultBanner.className = 'result-banner win';
-        } else if (selectedMethod) {
-          bannerText = `🏆 THE WINNER IS OUR METHOD (GameTester)!\nYou selected ${selectedMethod === 'm1' ? 'Method 1' : 'Method 2'}, but ${winnerName} was secretly powered by our GameTester engine.`;
+        } else if (selectedCandidate) {
+          bannerText = `The winner is our GameTester engine!\nYou selected ${selectedCandidate === 'alpha' ? 'Candidate Alpha' : 'Candidate Beta'}, but ${winnerName} was secretly powered by GameTester Headless ECS.`;
           resultBanner.className = 'result-banner info';
         } else {
-          bannerText = `🏆 THE WINNER IS OUR METHOD (GameTester)!\n${winnerName} was secretly powered by our GameTester engine.`;
+          bannerText = `The winner is our GameTester engine!\n${winnerName} was secretly powered by GameTester Headless ECS.`;
           resultBanner.className = 'result-banner info';
         }
 
         resultBanner.innerText = bannerText;
 
         const cfg = gameConfigs[currentGame];
-        const m1IsGT = isLeftGameTester;
-        document.getElementById('th-m1').innerText = m1IsGT ? 'Method 1 (OUR METHOD - GameTester)' : 'Method 1 (EXISTING METHOD - SOTA VLM)';
-        document.getElementById('th-m2').innerText = m1IsGT ? 'Method 2 (EXISTING METHOD - SOTA VLM)' : 'Method 2 (OUR METHOD - GameTester)';
+        const alphaIsGT = isAlphaGameTester;
+        document.getElementById('th-alpha').innerText = alphaIsGT ? 'Candidate Alpha (GameTester)' : 'Candidate Alpha (Baseline VLM)';
+        document.getElementById('th-beta').innerText = alphaIsGT ? 'Candidate Beta (Baseline VLM)' : 'Candidate Beta (GameTester)';
 
-        const m1Data = m1IsGT ? cfg.gtDetails : cfg.sotaDetails;
-        const m2Data = m1IsGT ? cfg.sotaDetails : cfg.gtDetails;
+        const alphaData = alphaIsGT ? cfg.gtDetails : cfg.sotaDetails;
+        const betaData = alphaIsGT ? cfg.sotaDetails : cfg.gtDetails;
 
         tableBody.innerHTML = `
           <tr>
             <td><strong>Architecture</strong></td>
-            <td>${m1Data.arch}</td>
-            <td>${m2Data.arch}</td>
+            <td class="${alphaIsGT ? 'highlight' : ''}">${alphaData.arch}</td>
+            <td class="${!alphaIsGT ? 'highlight' : ''}">${betaData.arch}</td>
           </tr>
           <tr>
             <td><strong>Movement & Physics</strong></td>
-            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.phys}</td>
-            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.phys}</td>
+            <td class="${alphaIsGT ? 'highlight' : ''}">${alphaData.phys}</td>
+            <td class="${!alphaIsGT ? 'highlight' : ''}">${betaData.phys}</td>
           </tr>
           <tr>
             <td><strong>Visual & Particle FX</strong></td>
-            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.part}</td>
-            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.part}</td>
+            <td class="${alphaIsGT ? 'highlight' : ''}">${alphaData.part}</td>
+            <td class="${!alphaIsGT ? 'highlight' : ''}">${betaData.part}</td>
           </tr>
           <tr>
             <td><strong>Audio Feedback</strong></td>
-            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.aud}</td>
-            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.aud}</td>
+            <td class="${alphaIsGT ? 'highlight' : ''}">${alphaData.aud}</td>
+            <td class="${!alphaIsGT ? 'highlight' : ''}">${betaData.aud}</td>
           </tr>
           <tr>
             <td><strong>Raycast & Geometry</strong></td>
-            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.ray}</td>
-            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.ray}</td>
+            <td class="${alphaIsGT ? 'highlight' : ''}">${alphaData.ray}</td>
+            <td class="${!alphaIsGT ? 'highlight' : ''}">${betaData.ray}</td>
           </tr>
           <tr>
             <td><strong>Lighting & Atmosphere</strong></td>
-            <td class="${m1IsGT ? 'highlight' : ''}">${m1Data.light}</td>
-            <td class="${!m1IsGT ? 'highlight' : ''}">${m2Data.light}</td>
+            <td class="${alphaIsGT ? 'highlight' : ''}">${alphaData.light}</td>
+            <td class="${!alphaIsGT ? 'highlight' : ''}">${betaData.light}</td>
           </tr>
         `;
 
