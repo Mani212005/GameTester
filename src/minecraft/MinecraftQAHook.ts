@@ -13,13 +13,15 @@ import {
 import { NavMeshAgent } from '../agent/NavMeshAgent';
 import { HeatmapGenerator, TelemetryPoint } from '../analytics/HeatmapGenerator';
 
+import { Observable } from '../qaHook';
+
 export interface AssertionResult {
   pass: boolean;
   message: string;
   state: MinecraftSceneState;
 }
 
-export class MinecraftQAHook {
+export class MinecraftQAHook implements Observable {
   private scene: THREE.Scene;
   private cannonWorld: CANNON.World;
   private renderer: THREE.WebGLRenderer;
@@ -72,6 +74,10 @@ export class MinecraftQAHook {
     }
   }
 
+  public getCapabilities(): string[] {
+    return ['voxels', 'spatial-graph', 'raycast', 'particles', 'audio', 'heatmap', 'navmesh'];
+  }
+
   public isManualMode(): boolean {
     return this.manualMode;
   }
@@ -94,10 +100,10 @@ export class MinecraftQAHook {
   public step(deltaMs: number = 16.666): MinecraftSceneState {
     const deltaSeconds = deltaMs / 1000;
 
-    // Apply inputs to player
-    this.controls.updateInputs(this.activeInputs);
+    // Apply inputs to player using exact step delta
+    this.controls.updateInputs(this.activeInputs, deltaSeconds);
 
-    // Step physics
+    // Step physics using exact step delta
     this.controls.stepPhysics(deltaSeconds);
     this.controls.updateCameraPosition();
 
@@ -160,10 +166,12 @@ export class MinecraftQAHook {
   }
 
   public resetPlayer(pos?: { x: number; y: number; z: number }): void {
-    const target = pos || { x: 0, y: 10, z: 0 };
-    this.controls.body.position.set(target.x, target.y, target.z);
-    this.controls.body.velocity.set(0, 0, 0);
-    this.controls.body.angularVelocity.set(0, 0, 0);
+    const target = pos || { x: 0, y: 7, z: 0 };
+    this.controls.position.set(target.x, target.y, target.z);
+    this.controls.velocity.set(0, 0, 0);
+    if ((this.controls as any).currentVel) {
+      (this.controls as any).currentVel.set(0, 0, 0);
+    }
     this.controls.updateCameraPosition();
   }
 

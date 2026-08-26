@@ -24,6 +24,10 @@ if (import.meta.env.VITE_ENABLE_QA_HOOK === 'true') {
     step: (_deltaMs: number = 16.666) => {
       return (window as any).qaHook.getSceneState();
     },
+    resetWorld: () => {
+      shire.camera.position.set(0, 5, 25);
+    },
+    getCapabilities: () => ['procedural-terrain', 'lighting', 'fireflies', 'orbit', 'camera'],
   };
 }
 

@@ -1,6 +1,13 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 
+export interface Observable {
+  getSceneState(): any;
+  step(deltaMs?: number): any;
+  resetWorld(seed?: number): void;
+  getCapabilities(): string[];
+}
+
 export interface Vector3D {
   x: number;
   y: number;
@@ -80,7 +87,7 @@ export interface QAHookOptions {
   resetPlayer: (pos?: Vector3D) => void;
 }
 
-export class QAHook {
+export class QAHook implements Observable {
   public static readonly VERSION: string = '1.0.0';
 
   private scene: THREE.Scene;
@@ -109,6 +116,10 @@ export class QAHook {
     this.handleInputFn = options.handleInput;
     this.checkGroundedFn = options.checkGrounded;
     this.resetPlayerFn = options.resetPlayer;
+  }
+
+  public getCapabilities(): string[] {
+    return ['physics', 'entities', 'rigid-body', 'input-injection', 'assertions'];
   }
 
   public isManualMode(): boolean {

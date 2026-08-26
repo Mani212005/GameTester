@@ -164,7 +164,7 @@ class Method2PlayerControls extends PlayerControls {
   private frictionGrounded = 18.0;
   private frictionAir = 2.0;
 
-  public override updateInputs(customActions?: Set<any>): void {
+  public override updateInputs(customActions?: Set<any>, dtOverride?: number): void {
     const actions = customActions || (this as any).activeActions;
 
     // Camera relative vectors
@@ -187,8 +187,8 @@ class Method2PlayerControls extends PlayerControls {
     const accelRate = isGrounded ? this.accelGrounded : this.accelAir;
     const frictionRate = isGrounded ? this.frictionGrounded : this.frictionAir;
 
-    // Delta time step (1/60s normalized)
-    const dt = 1 / 60;
+    // Exact delta time step
+    const dt = typeof dtOverride === 'number' && dtOverride > 0 ? dtOverride : (1 / 60);
 
     if (targetMove.lengthSq() > 0) {
       targetMove.normalize().multiplyScalar(this.moveSpeed);
