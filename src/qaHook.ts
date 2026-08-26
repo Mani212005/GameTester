@@ -102,6 +102,7 @@ export class QAHook implements Observable {
   private resetPlayerFn: (pos?: Vector3D) => void;
 
   private manualMode: boolean = false;
+  private isStepping: boolean = false;
   private stepCount: number = 0;
   private activeInputs: Set<InputAction> = new Set();
 
@@ -143,12 +144,20 @@ export class QAHook implements Observable {
   }
 
   public step(deltaMs: number = 16.666): SceneState {
-    const deltaSeconds = deltaMs / 1000;
-    this.handleInputFn(this.activeInputs);
-    this.stepPhysicsFn(deltaSeconds);
-    this.stepCount++;
-    this.renderer.render(this.scene, this.camera);
-    return this.getSceneState();
+    if (this.isStepping) {
+      throw new Error('REENTRANCY_VIOLATION: step() called while a physics step is already in flight');
+    }
+    this.isStepping = true;
+    try {
+      const deltaSeconds = deltaMs / 1000;
+      this.handleInputFn(this.activeInputs);
+      this.stepPhysicsFn(deltaSeconds);
+      this.stepCount++;
+      this.renderer.render(this.scene, this.camera);
+      return this.getSceneState();
+    } finally {
+      this.isStepping = false;
+    }
   }
 
   public getSceneState(): SceneState {

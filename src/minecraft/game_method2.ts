@@ -11,6 +11,7 @@ import { getBlockMaterials } from './textures';
 // ---------------------------------------------------------------------
 class MinecraftAudio {
   private ctx: AudioContext | null = null;
+  public activeNodeCount = 0;
 
   private initCtx() {
     if (!this.ctx) {
@@ -31,6 +32,7 @@ class MinecraftAudio {
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    this.activeNodeCount += 2;
 
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(180, now);
@@ -41,6 +43,14 @@ class MinecraftAudio {
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
+
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        gain.disconnect();
+        this.activeNodeCount = Math.max(0, this.activeNodeCount - 2);
+      } catch (_) {}
+    };
 
     osc.start(now);
     osc.stop(now + 0.08);
@@ -72,11 +82,30 @@ class MinecraftAudio {
     gain.gain.setValueAtTime(0.45, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
+    this.activeNodeCount += 3;
     noise.connect(filter);
     filter.connect(gain);
     gain.connect(this.ctx.destination);
 
+    noise.onended = () => {
+      try {
+        noise.disconnect();
+        filter.disconnect();
+        gain.disconnect();
+        this.activeNodeCount = Math.max(0, this.activeNodeCount - 3);
+      } catch (_) {}
+    };
+
     noise.start(now);
+    noise.stop(now + duration);
+  }
+
+  public close(): void {
+    if (this.ctx) {
+      try { this.ctx.close(); } catch (_) {}
+      this.ctx = null;
+      this.activeNodeCount = 0;
+    }
   }
 }
 

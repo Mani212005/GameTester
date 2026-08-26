@@ -31,6 +31,7 @@ export class MinecraftQAHook implements Observable {
   private particleManager?: any;
 
   private manualMode: boolean = false;
+  private isStepping: boolean = false;
   private stepCount: number = 0;
   private activeInputs: Set<MinecraftInputAction> = new Set();
 
@@ -101,30 +102,38 @@ export class MinecraftQAHook implements Observable {
   }
 
   public step(deltaMs: number = 16.666): MinecraftSceneState {
-    const deltaSeconds = deltaMs / 1000;
-
-    // Apply inputs to player using exact step delta
-    this.controls.updateInputs(this.activeInputs, deltaSeconds);
-
-    // Step physics using exact step delta
-    this.controls.stepPhysics(deltaSeconds);
-    this.controls.updateCameraPosition();
-
-    // Update particles in manual step mode to ensure clean disposal
-    if (this.particleManager && typeof this.particleManager.update === 'function') {
-      this.particleManager.update(deltaSeconds);
+    if (this.isStepping) {
+      throw new Error('REENTRANCY_VIOLATION: step() called while a physics step is already in flight');
     }
+    this.isStepping = true;
+    try {
+      const deltaSeconds = deltaMs / 1000;
 
-    // Record telemetry if player is colliding
-    const pos = this.controls.getPlayerState().position;
-    if (this.controls.isGrounded() === false && Math.abs(this.controls.velocity.x) > 0.1) {
-      this.heatmapGenerator.addPoint(pos.x, pos.y, pos.z, 0.4);
+      // Apply inputs to player using exact step delta
+      this.controls.updateInputs(this.activeInputs, deltaSeconds);
+
+      // Step physics using exact step delta
+      this.controls.stepPhysics(deltaSeconds);
+      this.controls.updateCameraPosition();
+
+      // Update particles in manual step mode to ensure clean disposal
+      if (this.particleManager && typeof this.particleManager.update === 'function') {
+        this.particleManager.update(deltaSeconds);
+      }
+
+      // Record telemetry if player is colliding
+      const pos = this.controls.getPlayerState().position;
+      if (this.controls.isGrounded() === false && Math.abs(this.controls.velocity.x) > 0.1) {
+        this.heatmapGenerator.addPoint(pos.x, pos.y, pos.z, 0.4);
+      }
+
+      this.stepCount++;
+      this.renderer.render(this.scene, this.camera);
+
+      return this.getSceneState();
+    } finally {
+      this.isStepping = false;
     }
-
-    this.stepCount++;
-    this.renderer.render(this.scene, this.camera);
-
-    return this.getSceneState();
   }
 
   public getSceneState(): MinecraftSceneState {
