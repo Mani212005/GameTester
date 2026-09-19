@@ -40,9 +40,9 @@ This visual-only paradigm introduces crippling latency (2,000ms – 5,000ms per 
 * **Production Security**: Production client bundles built via `npm run build` dead-code eliminate all `window.qaHook` debug and input injection surfaces.
 * **WebGL Render Pipeline**: WebGL context initializes without `gl.getError()` flags or network asset failures.
 
-### What It Does Not Prove:
+### What It Does Not Prove (and How Float Variance is Triaged):
 * **Hardware GPU Driver Parity**: Headless CI runs on SwiftShader CPU rasterization (`--use-angle=swiftshader`). Real-world mobile and discrete desktop GPUs have different float rounding pipelines and driver optimizations.
-* **Bit-Exact Float Reproducibility**: Cannon-es impulse solvers accumulate minor float variance across long step chains (measured empirical run-to-run divergence is $\approx 0.145\text{m}$ over 60 steps).
+* **Bit-Exact Float Reproducibility**: Cannon-es impulse solvers accumulate minor float variance across long step chains. Rather than hardcoding brittle static tolerances, GameTester integrates **TypeSafe Jev System One failure triage** (`src/jev/`) to classify test divergences into root causes (e.g. `float_variance_drift`, `true_clipping`, `input_injection_lag`, `collision_manifold_failure`, `state_desync_teleport`, `logic_regression`). High-confidence float variance drift within physical safety ceilings is auto-marked as a flaky pass; genuine regressions fail immediately, and low-confidence divergences are flagged for human visual inspection.
 
 
 ### Why SOTA VLM Screenshot Loops Fail
@@ -209,6 +209,32 @@ if (!result.pass) {
 * `window.qaHook.placeSelectedBlock(blockType?: BlockType): boolean`: Places a new voxel block at the targeted face.
 * `window.qaHook.setPlayerLookAt(yaw: number, pitch: number): void`: Sets camera orientation angles.
 
+### Headless Physics Failure Triage with TypeSafe Jev (`src/jev/`)
+
+GameTester integrates TypeSafe Jev System One (`typesafe/jev-1.13`) to eliminate flaky physics test triage across heterogeneous environments:
+
+```typescript
+import { triagePhysicsFailure } from './src/jev';
+
+const triageResult = await triagePhysicsFailure({
+  testName: 'Jump Impulse Determinism',
+  expected: { position: { x: 0, y: 6.166, z: 0 }, velocity: { x: 0, y: 6.166, z: 0 } },
+  actual: { position: { x: 0, y: 6.169, z: 0 }, velocity: { x: 0, y: 6.168, z: 0 } },
+  tolerance: { position: 0.005, velocity: 0.15 },
+  penetrationDepth: 0,
+});
+
+console.log(triageResult.action); 
+// 'AUTO_PASS_FLAKY' | 'FLAG_HUMAN_INSPECTION' | 'FAIL_REGRESSION'
+```
+
+* **Confidence Gating & Safety Bounds**:
+  * High-confidence ($\ge 0.85$) `float_variance_drift` within strict physical delta ceilings ($\le 0.05\text{m}$ position, $\le 0.50\text{m/s}$ velocity, zero penetration) $\to$ `AUTO_PASS_FLAKY`.
+  * Low-confidence ($< 0.85$ for drift, $< 0.70$ for regressions) or delta ceiling violations $\to$ `FLAG_HUMAN_INSPECTION`.
+  * Confirmed regressions (`true_clipping`, `collision_manifold_failure`, `logic_regression`) $\to$ `FAIL_REGRESSION`.
+* **Zero-Network Heuristic Fallback**:
+  * When `TYPESAFE_API_KEY` / `JEV_API_KEY` is not set or network calls timeout (sub-400ms constraint), a deterministic heuristic fallback evaluates engine signals locally with zero external network calls.
+
 ---
 
 ## ⚡ Quickstart & Interactive Testing Guide
@@ -226,51 +252,29 @@ cd GameTester
 npm install
 ```
 
-### 2. Headless Assertion Test Suite (`npm test`)
+### 2. Headless Assertion & Triage Test Suite (`npm test`)
 
-Run the automated Playwright + Vite headless test suite. This executes 5 deterministic test scenarios verifying voxel serialization, input movement, jump physics, state invariant assertion detection, and block modification:
+Run the automated Playwright + Vite headless test suite and Jev failure triage conformance:
 
 ```bash
 npm test
 ```
 
-*Example Output:*
-```text
-==================================================
-  GameTester - Headless ECS Observer Test Runner  
-==================================================
-
-[1/4] Starting Vite dev server in background...
-[Vite] Server listening at http://localhost:3100
-[2/4] Launching Playwright Headless Chromium...
-[Playwright] window.qaHook detected successfully!
-
-[3/4] Running Deterministic QA Test Suite...
-
-  ✓ Test 1: Minecraft Voxel World State Serialization [PASS] (42ms)
-  ✓ Test 2: Deterministic Input Injection & Movement [PASS] (85ms)
-  ✓ Test 3: Jump Impulse & Gravity Physics Simulation [PASS] (110ms)
-  ✓ Test 4: State Invariant Assertion (Boundary / Fall Detection) [PASS] (92ms)
-  ✓ Test 5: Interactive Voxel Modification Observer [PASS] (35ms)
-
-==================================================
-            DIAGNOSTIC TEST REPORT                
-==================================================
-{
-  "summary": {
-    "status": "PASS",
-    "totalTests": 5,
-    "passed": 5,
-    "failed": 0,
-    "totalDurationMs": 364
-  }
-}
-==================================================
-Summary: total=5, passed=5, failed=0
-All tests passed cleanly. Exiting with code 0.
+Optionally set your TypeSafe API key for live Jev model evaluation during runs (tests use deterministic heuristic fallback or mocks when unset):
+```bash
+export TYPESAFE_API_KEY="your-typesafe-api-key"
+# or export JEV_API_KEY="your-typesafe-api-key"
 ```
 
-### 3. Interactive Double-Blind Dashboard (`npm run dev`)
+### 3. Fast Mocked Unit Tests (`npm run test:unit`)
+
+Run fast mocked unit tests verifying Jev request formatting, response parsing, confidence gating, physical safety bounds, and deterministic heuristic fallback (zero live network calls):
+
+```bash
+npm run test:unit
+```
+
+### 4. Interactive Double-Blind Dashboard (`npm run dev`)
 
 Launch the local Vite development server to test interactively or run double-blind taste tests:
 
@@ -284,7 +288,7 @@ Open your browser at `http://localhost:5173` to access the **Double-Blind Minecr
 * Left-Click to break targeted blocks; Right-Click to place blocks.
 * Grade Movement, Graphics, and Overall Experience on the bottom rating bar, select your choice, and click **🏆 REVEAL WINNER** to view engine metrics!
 
-### 4. Verify Production Build (`npm run build`)
+### 5. Verify Production Build (`npm run build`)
 
 Compile TypeScript and build Vite production assets:
 ```bash

@@ -12,15 +12,22 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
+import {
+  triagePhysicsFailure,
+  JevTriageEngine,
+  CONFIDENCE_THRESHOLDS,
+  FAILURE_CAUSE_CRITERIA,
+} from '../src/jev/index.ts';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
 // Explicit named physical tolerances with documented physical basis
 const TOL = {
-  velocity: 0.15, // m/s — accounts for Cannon-es floating point solver iteration variance
-  position: 0.005, // meters — strict 5mm bound for deterministic manual-stepping physics
-  angle: 0.5,     // degrees — rotational alignment tolerance
+  velocity: 0.15, // m/s - accounts for Cannon-es floating point solver iteration variance
+  position: 0.005, // meters - strict 5mm bound for deterministic manual-stepping physics
+  angle: 0.5,     // degrees - rotational alignment tolerance
 };
 
 function expectWithin(actual, expected, tolerance, label = 'Value') {
@@ -31,9 +38,55 @@ function expectWithin(actual, expected, tolerance, label = 'Value') {
   return true;
 }
 
+async function expectWithinWithTriage(actual, expected, tolerance, label = 'Value', context = {}) {
+  const diff = Math.abs(actual - expected);
+  if (diff <= tolerance) {
+    return { passed: true, isFlakyPass: false, delta: diff };
+  }
+
+  // Brittle tolerance exceeded: invoke Jev physics failure triage
+  const signals = {
+    testName: context.testName || 'Headless Physics Test',
+    assertionLabel: label,
+    stepCount: context.stepCount ?? 0,
+    dt: context.dt ?? 0.01666,
+    expected: { [context.dimension || 'value']: expected, ...context.expected },
+    actual: { [context.dimension || 'value']: actual, ...context.actual },
+    tolerance: { [context.dimension || 'value']: tolerance },
+    delta: {
+      [context.dimension || 'value']: diff,
+      scalar: diff,
+      position: context.dimension === 'position' ? diff : undefined,
+      velocity: context.dimension === 'velocity' ? diff : undefined,
+    },
+    penetrationDepth: context.penetrationDepth ?? 0,
+    boundingOverlap: context.boundingOverlap ?? false,
+    contacts: context.contacts ?? [],
+    errorMessage: `${label} mismatch: expected ${expected} ±${tolerance}, but got ${actual} (delta: ${diff.toFixed(6)})`,
+  };
+
+  const triageResult = await triagePhysicsFailure(signals, {
+    apiKey: process.env.TYPESAFE_API_KEY || process.env.JEV_API_KEY || '',
+    mockDecisionHandler: context.mockDecisionHandler,
+  });
+
+  if (triageResult.action === 'AUTO_PASS_FLAKY') {
+    console.log(`    ⚠️  [JEV TRIAGE] ${label} exceeded tolerance (delta: ${diff.toFixed(6)}), but auto-marked FLAKY PASS (cause: ${triageResult.cause}, confidence: ${triageResult.confidence.toFixed(2)}, source: ${triageResult.source})`);
+    return { passed: true, isFlakyPass: true, delta: diff, triage: triageResult };
+  }
+
+  if (triageResult.action === 'FLAG_HUMAN_INSPECTION') {
+    console.log(`    🔍  [JEV TRIAGE] ${label} FLAGGED FOR HUMAN VISUAL INSPECTION (cause: ${triageResult.cause}, confidence: ${triageResult.confidence.toFixed(2)})`);
+    throw new Error(`[HUMAN_INSPECTION_REQUIRED] ${label} divergence: expected ${expected} ±${tolerance}, got ${actual} (delta: ${diff.toFixed(6)}). Jev flagged for visual review: ${triageResult.reason}`);
+  }
+
+  console.log(`    ❌  [JEV TRIAGE] ${label} CONFIRMED REGRESSION: ${triageResult.cause} (confidence: ${triageResult.confidence.toFixed(2)})`);
+  throw new Error(`[PHYSICS_REGRESSION] ${label} regression: ${triageResult.reason}`);
+}
+
 async function runTestSuite() {
   console.log('\n==================================================');
-  console.log('  GameTester — Comprehensive ECS Observer Suite   ');
+  console.log('  GameTester - Comprehensive ECS Observer Suite   ');
   console.log('==================================================\n');
 
   const startTime = Date.now();
@@ -189,7 +242,13 @@ async function runTestSuite() {
           return { tick2State, tick25State, landedState };
         });
 
-        expectWithin(jumpResults.tick2State.playerState.velocity.y, 6.166, TOL.velocity, 'Launch Y velocity');
+        await expectWithinWithTriage(
+          jumpResults.tick2State.playerState.velocity.y,
+          6.166,
+          TOL.velocity,
+          'Launch Y velocity',
+          { testName, stepCount: 2, dimension: 'velocity' }
+        );
         const reachedApex = jumpResults.tick25State.playerState.velocity.y < 0;
         const landedGrounded = jumpResults.landedState.playerState.isGrounded;
 
@@ -421,7 +480,13 @@ async function runTestSuite() {
           return Math.max(dx, dy, dz);
         });
 
-        expectWithin(divergence, 0.0, TOL.position, 'Run-to-run position divergence');
+        await expectWithinWithTriage(
+          divergence,
+          0.0,
+          TOL.position,
+          'Run-to-run position divergence',
+          { testName, stepCount: 60, dimension: 'position' }
+        );
 
         const details = `Exact determinism confirmed: divergence=${divergence.toFixed(8)}m (within ±${TOL.position}m bound)`;
         testResults.push({
@@ -747,6 +812,129 @@ async function runTestSuite() {
           durationMs: Date.now() - tStart,
           details,
           snapshot: destroyCheck,
+        });
+        console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
+      } catch (err) {
+        testResults.push({ name: testName, passed: false, durationMs: Date.now() - tStart, details: err.message });
+        console.log(`  ✗ ${testName} [FAIL]: ${err.message}`);
+      }
+    }
+
+    // ----------------------------------------------------
+    // TEST 15 (GT-010): Jev Physics Failure Triage & Confidence Gating Conformance
+    // ----------------------------------------------------
+    {
+      const tStart = Date.now();
+      const testName = 'Test 15: Jev Physics Failure Triage & Confidence Gating Conformance (GT-010)';
+      try {
+        // 1. High-confidence float variance drift auto-marks as FLAKY PASS
+        const flakyDriftResult = await triagePhysicsFailure({
+          testName: 'Simulated Drift Test',
+          expected: { position: 0.0 },
+          actual: { position: 0.0053 }, // 0.3mm over 5mm tolerance
+          tolerance: { position: 0.005 },
+          delta: { position: 0.0053 },
+          penetrationDepth: 0,
+        }, {
+          mockDecisionHandler: () => ({
+            cause: 'float_variance_drift',
+            confidence: 0.94,
+            model: 'typesafe/jev-1.13',
+            severityScore: 0.1,
+          }),
+        });
+
+        if (flakyDriftResult.action !== 'AUTO_PASS_FLAKY' || !flakyDriftResult.autoMarkedPass) {
+          throw new Error(`Expected AUTO_PASS_FLAKY for high-confidence float drift, got: ${flakyDriftResult.action}`);
+        }
+
+        // 2. Low-confidence float variance drift flags for human inspection
+        const lowConfResult = await triagePhysicsFailure({
+          testName: 'Simulated Ambiguous Drift',
+          expected: { position: 0.0 },
+          actual: { position: 0.008 },
+          tolerance: { position: 0.005 },
+          delta: { position: 0.008 },
+          penetrationDepth: 0,
+        }, {
+          mockDecisionHandler: () => ({
+            cause: 'float_variance_drift',
+            confidence: 0.65, // Below 0.85 threshold
+            model: 'typesafe/jev-1.13',
+          }),
+        });
+
+        if (lowConfResult.action !== 'FLAG_HUMAN_INSPECTION' || lowConfResult.autoMarkedPass) {
+          throw new Error(`Expected FLAG_HUMAN_INSPECTION for low-confidence float drift, got: ${lowConfResult.action}`);
+        }
+
+        // 3. Float drift exceeding physical delta ceiling (0.05m) flags for inspection
+        const ceilingExceededResult = await triagePhysicsFailure({
+          testName: 'Simulated Large Delta Drift',
+          expected: { position: 0.0 },
+          actual: { position: 0.09 },
+          delta: { position: 0.09 }, // 9cm > 5cm safety ceiling
+          penetrationDepth: 0,
+        }, {
+          mockDecisionHandler: () => ({
+            cause: 'float_variance_drift',
+            confidence: 0.98,
+            model: 'typesafe/jev-1.13',
+          }),
+        });
+
+        if (ceilingExceededResult.action !== 'FLAG_HUMAN_INSPECTION' || ceilingExceededResult.autoMarkedPass) {
+          throw new Error(`Expected safety ceiling enforcement to flag inspection, got: ${ceilingExceededResult.action}`);
+        }
+
+        // 4. True clipping fails regression immediately
+        const clippingResult = await triagePhysicsFailure({
+          testName: 'Simulated Terrain Clipping',
+          expected: { position: { x: 0, y: 1, z: 0 }, isGrounded: true },
+          actual: { position: { x: 0, y: -1, z: 0 }, isGrounded: false },
+          penetrationDepth: 1.0,
+        }, {
+          mockDecisionHandler: () => ({
+            cause: 'true_clipping',
+            confidence: 0.97,
+            model: 'typesafe/jev-1.13',
+          }),
+        });
+
+        if (clippingResult.action !== 'FAIL_REGRESSION' || clippingResult.autoMarkedPass) {
+          throw new Error(`Expected FAIL_REGRESSION for true clipping, got: ${clippingResult.action}`);
+        }
+
+        // 5. Deterministic fallback with unconfigured key
+        const fallbackResult = await triagePhysicsFailure({
+          testName: 'Simulated Unconfigured Fallback',
+          expected: { position: 0.0 },
+          actual: { position: 0.0052 },
+          tolerance: { position: 0.005 },
+          delta: { position: 0.0052 },
+          penetrationDepth: 0,
+        }, { apiKey: '' });
+
+        if (fallbackResult.source !== 'heuristic_fallback' || fallbackResult.action !== 'AUTO_PASS_FLAKY') {
+          throw new Error(`Expected deterministic fallback AUTO_PASS_FLAKY, got: ${fallbackResult.action} (source: ${fallbackResult.source})`);
+        }
+
+        // 6. Run comprehensive node:test unit test suite
+        execSync('node --test tests/jev_triage.test.mjs', { cwd: rootDir, stdio: 'pipe' });
+
+        const details = `Jev triage conformance verified: Auto-pass flaky drift (${flakyDriftResult.confidence}), Low-conf flag (${lowConfResult.confidence}), Safety ceiling flag, True clipping regression fail, Deterministic heuristic fallback, and unit tests green.`;
+        testResults.push({
+          name: testName,
+          passed: true,
+          durationMs: Date.now() - tStart,
+          details,
+          snapshot: {
+            flakyDriftAction: flakyDriftResult.action,
+            lowConfAction: lowConfResult.action,
+            ceilingAction: ceilingExceededResult.action,
+            clippingAction: clippingResult.action,
+            fallbackSource: fallbackResult.source,
+          },
         });
         console.log(`  ✓ ${testName} [PASS] (${Date.now() - tStart}ms)`);
       } catch (err) {

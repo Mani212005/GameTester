@@ -176,7 +176,7 @@ export class PlayerControls {
     return false;
   }
 
-  public updateInputs(customActions?: Set<MinecraftInputAction>): void {
+  public updateInputs(customActions?: Set<MinecraftInputAction>, _dtOverride?: number): void {
     const actions = customActions || this.activeActions;
 
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
