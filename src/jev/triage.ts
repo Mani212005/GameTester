@@ -10,7 +10,11 @@
 
 import { JevClient } from './client.ts';
 import { CONFIDENCE_THRESHOLDS } from './constants.ts';
-import { evaluateDeterministicFallback } from './fallback.ts';
+import {
+  computePositionDelta,
+  computeVelocityDelta,
+  evaluateDeterministicFallback,
+} from './fallback.ts';
 import type {
   FailureCause,
   JevDecisionResult,
@@ -95,8 +99,8 @@ export class JevTriageEngine {
     const maxVelDelta = this.config.maxFloatDriftVelocityDelta!;
 
     // Compute actual deltas for physical safety envelope check
-    const posDelta = signals.delta?.position ?? 0;
-    const velDelta = signals.delta?.velocity ?? 0;
+    const posDelta = computePositionDelta(signals.expected, signals.actual, signals.delta?.position);
+    const velDelta = computeVelocityDelta(signals.expected, signals.actual, signals.delta?.velocity);
     const penetration = signals.penetrationDepth ?? 0;
 
     let action: TriageAction;

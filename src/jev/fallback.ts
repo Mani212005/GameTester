@@ -151,7 +151,7 @@ function hasNonFiniteOrWarp(expected: any, actual: any): boolean {
   return posDelta > 5.0;
 }
 
-function computePositionDelta(expected: any, actual: any, explicitDelta?: number): number {
+export function computePositionDelta(expected: any, actual: any, explicitDelta?: number): number {
   if (typeof explicitDelta === 'number' && Number.isFinite(explicitDelta)) {
     return explicitDelta;
   }
@@ -178,7 +178,7 @@ function computePositionDelta(expected: any, actual: any, explicitDelta?: number
   return 0;
 }
 
-function computeVelocityDelta(expected: any, actual: any, explicitDelta?: number): number {
+export function computeVelocityDelta(expected: any, actual: any, explicitDelta?: number): number {
   if (typeof explicitDelta === 'number' && Number.isFinite(explicitDelta)) {
     return explicitDelta;
   }

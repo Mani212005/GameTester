@@ -55,7 +55,7 @@ export function buildEngineState(signals: PhysicsEngineSignals): Record<string, 
 
   // Calculate position delta if not explicitly supplied
   let computedPositionDelta: number | undefined = delta?.position;
-  if (computedPositionDelta === undefined && expected?.position && actual?.position) {
+  if (computedPositionDelta === undefined && expected?.position != null && actual?.position != null) {
     if (typeof expected.position === 'number' && typeof actual.position === 'number') {
       computedPositionDelta = Math.abs(actual.position - expected.position);
     } else if (
@@ -66,16 +66,16 @@ export function buildEngineState(signals: PhysicsEngineSignals): Record<string, 
     ) {
       const expPos = expected.position as { x: number; y: number; z: number };
       const actPos = actual.position as { x: number; y: number; z: number };
-      const dx = actPos.x - expPos.x;
-      const dy = actPos.y - expPos.y;
-      const dz = actPos.z - expPos.z;
+      const dx = (actPos.x ?? 0) - (expPos.x ?? 0);
+      const dy = (actPos.y ?? 0) - (expPos.y ?? 0);
+      const dz = (actPos.z ?? 0) - (expPos.z ?? 0);
       computedPositionDelta = Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
   }
 
   // Calculate velocity delta if not explicitly supplied
   let computedVelocityDelta: number | undefined = delta?.velocity;
-  if (computedVelocityDelta === undefined && expected?.velocity && actual?.velocity) {
+  if (computedVelocityDelta === undefined && expected?.velocity != null && actual?.velocity != null) {
     if (typeof expected.velocity === 'number' && typeof actual.velocity === 'number') {
       computedVelocityDelta = Math.abs(actual.velocity - expected.velocity);
     } else if (
@@ -86,9 +86,9 @@ export function buildEngineState(signals: PhysicsEngineSignals): Record<string, 
     ) {
       const expVel = expected.velocity as { x: number; y: number; z: number };
       const actVel = actual.velocity as { x: number; y: number; z: number };
-      const dvx = actVel.x - expVel.x;
-      const dvy = actVel.y - expVel.y;
-      const dvz = actVel.z - expVel.z;
+      const dvx = (actVel.x ?? 0) - (expVel.x ?? 0);
+      const dvy = (actVel.y ?? 0) - (expVel.y ?? 0);
+      const dvz = (actVel.z ?? 0) - (expVel.z ?? 0);
       computedVelocityDelta = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz);
     }
   }

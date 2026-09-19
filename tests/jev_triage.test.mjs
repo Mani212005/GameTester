@@ -72,6 +72,18 @@ test('Jev Request Builder generates valid TypeSafe System One schema', () => {
   assert.equal(state.geometry_and_contacts.penetration_depth_meters, 0);
 });
 
+test('Jev Request Builder computes deltas when position and velocity baselines are 0', () => {
+  const signals = {
+    testName: 'Zero Baseline Kinematics',
+    expected: { position: 0, velocity: 0 },
+    actual: { position: 0.004, velocity: 0.002 },
+  };
+
+  const state = buildEngineState(signals);
+  assert.equal(state.kinematics.divergence.position_delta_meters, 0.004);
+  assert.equal(state.kinematics.divergence.velocity_delta_ms, 0.002);
+});
+
 test('Jev Response Parser extracts choice, confidence, and probabilities from TypeSafe API', () => {
   const mockApiResponse = {
     model: 'typesafe/jev-1.13',
@@ -200,6 +212,31 @@ test('Safety Ceilings: Float drift exceeding max delta ceiling NEVER auto-passes
     expected: { position: { x: 0, y: 0, z: 0 } },
     actual: { position: { x: 0.12, y: 0, z: 0 } },
     delta: { position: 0.12 }, // Exceeds MAX_FLOAT_DRIFT_POSITION_DELTA (0.05)
+    penetrationDepth: 0,
+  };
+
+  const result = await engine.triage(signals);
+
+  assert.equal(result.action, 'FLAG_HUMAN_INSPECTION');
+  assert.equal(result.autoMarkedPass, false);
+  assert.equal(result.requiresHumanReview, true);
+  assert.match(result.reason, /exceeded safety ceiling/i);
+});
+
+test('Safety Ceilings: Float drift exceeding max delta ceiling without explicit delta signal NEVER auto-passes', async () => {
+  const engine = new JevTriageEngine({
+    mockDecisionHandler: () => ({
+      // Model claims float drift with 99% confidence, but delta is omitted and actual divergence is 0.12m > 0.05m ceiling
+      cause: 'float_variance_drift',
+      confidence: 0.99,
+      model: 'mock_jev',
+    }),
+  });
+
+  const signals = {
+    testName: 'Walk Test Without Explicit Delta',
+    expected: { position: 0 },
+    actual: { position: 0.12 },
     penetrationDepth: 0,
   };
 
