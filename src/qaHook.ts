@@ -267,6 +267,12 @@ export class QAHook implements Observable {
     }
   }
 
+  public resetWorld(_seed?: number): void {
+    this.resetPlayer();
+    this.stepCount = 0;
+    this.activeInputs.clear();
+  }
+
   public resetPlayer(pos?: Vector3D): void {
     this.resetPlayerFn(pos);
   }
