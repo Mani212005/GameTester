@@ -26,8 +26,9 @@ GameTester avoids per-frame VLM inference latency and sub-pixel visual ambiguity
     └── Invariant Assertion Engine: assertState(condition) for bug detection
                                   │
                                   ▼
- 3. Automated Test Runner & Observer Agents
+ 3. Automated Test Runner, Observer Agents & Triage
     ├── Playwright Chromium Headless Test Suite (scripts/test_runner.mjs)
+    ├── TypeSafe Jev System One Physics Failure Triage Engine (src/jev/)
     ├── A* NavMesh Autonomous Speedrun Agent (src/agent/NavMeshAgent.ts)
     └── Spatial Density Heatmap Analytics (src/analytics/HeatmapGenerator.ts)
                                   │
@@ -52,12 +53,9 @@ The automated test runner evaluates physics invariants, state serialization, and
 2. **Hook Detection & Handshake**:
    - The browser navigates to `/public/game_method2.html`.
    - Playwright awaits `window.qaHook` initialization via `waitForFunction`.
-3. **Deterministic State Invariant Checks (5 Tests)**:
-   - **Test 1 (Voxel State Serialization)**: Verifies 27,000+ blocks, block type breakdowns (Stone, Dirt, Grass, Wood), player coordinates, and grounded state.
-   - **Test 2 (Input Injection & Friction)**: Injects `move_forward`, steps physics for 15 frames (16.66ms each), and verifies negative Z-axis displacement.
-   - **Test 3 (Jump & Gravity Simulation)**: Injects `jump`, tracks upward velocity ($Y_{\text{vel}} \approx +5.83$), apex deceleration, and floor touchdown confirmation.
-   - **Test 4 (Boundary / Fall Invariant Detection)**: Exercises `assertState()`, deliberately checking player bounds to catch out-of-world falling bugs.
-   - **Test 5 (Interactive Voxel Mutation)**: Triggers block destruction and placement, asserting exact block count transitions ($27427 \to 27426 \to 27427$).
+3. **Deterministic State Invariant & Conformance Checks**:
+   - **Tests 1–14 (ECS Observer & Physics Validation)**: Verifies voxel serialization, input injection, jump physics, boundary assertions, voxel mutations, test isolation (`resetWorld`), seed invariance, determinism, WebGL render smoke, dead-code elimination, multi-environment conformance, boundary handling, memory/audio lifecycle, and cleanup.
+   - **Test 15 (Jev Physics Failure Triage Conformance)**: Verifies root-cause classification (`float_variance_drift`, `true_clipping`), confidence gating, physical safety ceilings, and deterministic heuristic fallback.
 4. **Diagnostic Output**:
    - Emits structured JSON summary to stdout and logs.
 
@@ -99,7 +97,8 @@ Used by human evaluators, engineers, and LLMs to comparatively benchmark candida
 
 | Command | Action | Output / Target |
 | :--- | :--- | :--- |
-| `npm test` | Runs 5-test headless Playwright test suite | Structured JSON Diagnostic Log |
+| `npm test` | Runs Playwright headless observer suite and Jev triage conformance (`scripts/test_runner.mjs`) | Structured JSON Diagnostic Log |
+| `npm run test:unit` | Runs fast mocked unit tests with zero live network calls (`tests/jev_triage.test.mjs`) | TAP Unit Test Output |
 | `npm run dev -- --port 3100` | Starts interactive Vite studio | `http://localhost:3100/` |
 | `npm run build` | Compiles TypeScript and builds production bundles | `dist/` |
 | `npm run preview` | Previews production build locally | `http://localhost:4173/` |

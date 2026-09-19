@@ -71,6 +71,7 @@ The central coordinator exposing the headless testing surface to `window.qaHook`
 | `getSceneState()` | `() => SceneState` | Gathers instantaneous ground-truth coordinates, velocities, and contacts. |
 | `assertState(condition)` | `(fn) => AssertionResult` | Evaluates a custom predicate against scene state; returns pass/fail report. |
 | `resetPlayer(pos)` | `(Vector3D?) => void` | Teleports player entity to target coordinates and resets velocity to 0. |
+| `resetWorld(seed?)` | `(number?) => void` | Resets player transform, clears input buffer, and resets step count to 0. |
 | `startAutonomousExplorer()` | `(target?) => void` | Initiates A* automated pathfinding to target coordinate. |
 | `stopAutonomousExplorer()` | `() => void` | Cancels pathfinding and resets input buffer. |
 | `destroy()` | `() => void` | Cleans up active listeners and unbinds `window.qaHook`. |
@@ -155,3 +156,23 @@ Procedural atmospheric environment rendering 120-segment parametric rolling hill
 * **Double-Blind Testing**: An evaluation protocol where neither the evaluator nor the UI knows which candidate uses which underlying architecture until votes are locked.
 * **Hitscan Raycast**: Projecting an instantaneous linear vector from the camera crosshair to calculate exact polygon/mesh intersection.
 * **AABB (Axis-Aligned Bounding Box)**: Minimal non-rotated box enclosing a 3D geometry, used for fast preliminary collision testing.
+* **Float Variance Drift**: Microscopic numerical solver divergence accumulating across GPU/CPU platforms without physical penetration or logic failure.
+* **Confidence Gating**: Decision routing policy that auto-marks high-confidence float drift as a flaky pass, fails verified regressions, and flags low-confidence or boundary-violating cases for human visual inspection.
+
+---
+
+## 4. Jev Headless Physics Failure Triage (`src/jev/`)
+
+### Interfaces & Types (`src/jev/types.ts`)
+* `FailureCause`: Closed failure taxonomy (`'float_variance_drift' | 'true_clipping' | 'input_injection_lag' | 'collision_manifold_failure' | 'state_desync_teleport' | 'logic_regression'`).
+* `TriageAction`: Action outcome (`'AUTO_PASS_FLAKY' | 'FLAG_HUMAN_INSPECTION' | 'FAIL_REGRESSION'`).
+* `PhysicsEngineSignals`: Structured telemetry including `expected`, `actual`, `tolerance`, `delta`, `penetrationDepth`, `boundingOverlap`, `contacts`, and `metadata`.
+* `TriageResult`: Structured triage output containing `action`, `cause`, `confidence`, `probabilities`, `severityScore`, `reason`, `source`, `autoMarkedPass`, and `requiresHumanReview`.
+* `JevTriageConfig`: Engine configuration supporting custom thresholds, model overrides, API keys, endpoints, and mock decision handlers.
+
+### Classes & Functions
+* `JevClient` (`src/jev/client.ts`): Client for TypeSafe System One / OpenRouter decision API with configurable timeouts (default 400ms).
+* `JevTriageEngine` (`src/jev/triage.ts`): Confidence-gated routing engine enforcing physical safety ceilings before auto-passing.
+* `evaluateDeterministicFallback(signals)` (`src/jev/fallback.ts`): Local deterministic heuristic classifier for offline, timeout, or unconfigured fallback.
+* `triagePhysicsFailure(signals, config?)` (`src/jev/triage.ts`): High-level entry helper for failure triage.
+* `CONFIDENCE_THRESHOLDS` (`src/jev/constants.ts`): Hardcoded safety thresholds (`HIGH_CONFIDENCE_AUTO_PASS = 0.85`, `LOW_CONFIDENCE_FLAG_INSPECTION = 0.70`, `MAX_FLOAT_DRIFT_POSITION_DELTA = 0.05m`, `MAX_FLOAT_DRIFT_VELOCITY_DELTA = 0.50m/s`, `PENETRATION_CLIPPING_THRESHOLD = 0.02m`).

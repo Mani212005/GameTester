@@ -922,7 +922,7 @@ async function runTestSuite() {
         // 6. Run comprehensive node:test unit test suite
         execSync('node --test tests/jev_triage.test.mjs', { cwd: rootDir, stdio: 'pipe' });
 
-        const details = `Jev triage conformance verified: Auto-pass flaky drift (${flakyDriftResult.confidence}), Low-conf flag (${lowConfResult.confidence}), Safety ceiling flag, True clipping regression fail, Deterministic heuristic fallback, and 16/16 unit tests green.`;
+        const details = `Jev triage conformance verified: Auto-pass flaky drift (${flakyDriftResult.confidence}), Low-conf flag (${lowConfResult.confidence}), Safety ceiling flag, True clipping regression fail, Deterministic heuristic fallback, and unit tests green.`;
         testResults.push({
           name: testName,
           passed: true,
