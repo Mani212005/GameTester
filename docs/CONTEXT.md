@@ -83,13 +83,14 @@ The central coordinator exposing the headless testing surface to `window.qaHook`
 
 | Method | Signature | Description |
 | :--- | :--- | :--- |
-| `getBlock(x, y, z)` | `(number, number, number) => number` | Returns block type ID (0=Air, 1=Grass, 2=Dirt, 3=Stone, etc.). |
-| `setBlock(x, y, z, type)` | `(number, number, number, number) => void` | Sets voxel type and marks mesh chunk dirty for geometry rebuild. |
-| `raycastBlock(origin, dir, maxDist)` | `(Vector3, Vector3, number) => HitResult` | Performs DDA voxel traversal to find targeted block and face normal. |
-| `breakBlock(x, y, z)` | `(number, number, number) => boolean` | Destroys block, spawns 18-part debris explosion particles, plays audio. |
-| `placeBlock(x, y, z, type)` | `(number, number, number, number) => boolean` | Places block at face adjacent to normal, plays placement audio. |
-| `getTotalBlockCount()` | `() => number` | Returns total active non-air voxels across all loaded chunks. |
-| `getBlockCountsByType()` | `() => Record<string, number>` | Returns dictionary tally of block counts by category. |
+| `getBlock(x, y, z)` | `(number, number, number) => BlockType` | Returns block type ID (0=Air, 1=Grass, 2=Dirt, 3=Stone, etc.). |
+| `setBlock(x, y, z, type)` | `(number, number, number, BlockType) => boolean` | Sets voxel type and marks mesh chunk dirty; triggers geometry rebuild unless deferred during bulk edits. |
+| `generateTerrain(seed)` | `(number?) => void` | Generates procedural terrain with height variations and trees, batching mesh rebuilds. |
+| `resetWorld(seed)` | `(number?) => void` | Clears chunks, removes meshes, and regenerates terrain for given seed. |
+| `rebuildWorld()` | `() => void` | Rebuilds dirty chunk geometries and scene meshes. |
+| `getVoxelState()` | `() => VoxelWorldState` | Tallies block counts by numeric type in hot loop and returns total blocks, counts by name, and world bounds. |
+| `raycastVoxel(origin, dir, maxDist)` | `(Vector3, Vector3, number?) => { hit: boolean, blockPos?: Vector3D, blockType?: BlockType, placePos?: Vector3D }` | Raycasts through voxel grid to locate targeted block and adjacent placement coordinate. |
+| `updateLiquids()` | `() => void` | Propagates liquid voxels (water) downwards and horizontally. |
 
 ---
 
@@ -117,13 +118,19 @@ A* 3D pathfinding engine navigating complex voxel terrains and obstacle fields.
 ---
 
 ### `HeatmapGenerator` (`src/analytics/HeatmapGenerator.ts`)
-Spatial analytics engine logging position distributions to detect high-traffic and neglected zones.
+Spatial analytics engine logging 3D position and defect severity distributions into a pre-allocated ring buffer with RBush spatial indexing and Three.js instanced rendering.
 
 | Method | Signature | Description |
 | :--- | :--- | :--- |
-| `recordPosition(pos)` | `(Vector3D) => void` | Increments spatial density bin corresponding to $(x, z)$ coordinate. |
-| `generateTexture()` | `() => THREE.CanvasTexture` | Creates color-mapped 2D heat texture (Blue=Low, Yellow=Mid, Red=High). |
-| `toggleOverlay(scene)` | `(THREE.Scene) => boolean` | Attaches/detaches floating semi-transparent heatmap plane to world. |
+| `addPoint(x, y, z, severity)` | `(number, number, number, number?) => void` | Zero-allocation telemetry recording into ring buffer with O(1) instance update and lazy spatial tree dirtying. |
+| `rebuildSpatialIndex()` | `() => void` | Rebuilds RBush 2D spatial index for rapid range & density lookups on ground plane (x, z). |
+| `querySpatialDensity(minX, minZ, maxX, maxZ)` | `(number, number, number, number) => RBushItem[]` | Performs O(log N) spatial density & defect lookup for bounding region, lazily rebuilding index if dirty. |
+| `getPointCount()` | `() => number` | Returns current active number of points stored in ring buffer. |
+| `getHeatmapData()` | `() => TelemetryPoint[]` | Exports all recorded telemetry data points. |
+| `updateInstancedMesh()` | `() => void` | Fully synchronizes Three.js InstancedMesh with ring buffer points. |
+| `setVisible(visible)` | `(boolean) => void` | Sets visibility of the instanced mesh overlay. |
+| `toggleVisible()` | `() => boolean` | Toggles visibility of the instanced mesh overlay and returns new state. |
+| `isHeatmapVisible()` | `() => boolean` | Returns true if the heatmap overlay is currently visible. |
 
 ---
 
