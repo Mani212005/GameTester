@@ -18,6 +18,9 @@ export interface RBushItem {
   index: number;
 }
 
+const AMBER_COLOR = new THREE.Color(0xf59e0b);
+const RED_COLOR = new THREE.Color(0xef4444);
+
 export class HeatmapGenerator {
   // 1. Pre-allocated Float32Array ring buffer for 40,000 floats (10,000 points * 4 attributes: x, y, z, severity)
   private readonly bufferCapacity: number = 10000;
@@ -27,6 +30,8 @@ export class HeatmapGenerator {
 
   // 2. RBush 2D spatial index on ground plane (x, z)
   private spatialTree: RBush<RBushItem> = new RBush<RBushItem>();
+  // Index is rebuilt lazily on the first query after a write, not on every addPoint.
+  private spatialDirty: boolean = false;
 
   // 3. Three.js InstancedMesh visualization
   private scene: THREE.Scene | null = null;
@@ -34,6 +39,8 @@ export class HeatmapGenerator {
   private isVisible: boolean = false;
   private dummyMatrix: THREE.Matrix4 = new THREE.Matrix4();
   private dummyColor: THREE.Color = new THREE.Color();
+  // True until the instanced mesh has been fully synced with the ring buffer.
+  private meshNeedsFullSync: boolean = true;
 
   constructor(scene?: THREE.Scene) {
     if (scene) {
@@ -79,14 +86,22 @@ export class HeatmapGenerator {
       this.totalRecordedCount++;
     }
 
-    this.rebuildSpatialIndex();
-    this.updateInstancedMesh();
+    this.spatialDirty = true;
+    if (this.instancedMesh && !this.meshNeedsFullSync) {
+      // Only the overwritten slot changed; instance i mirrors buffer slot i.
+      this.instancedMesh.count = this.totalRecordedCount;
+      this.writeInstance((slot / 4) | 0);
+      this.markInstancesUpdated();
+    } else {
+      this.updateInstancedMesh();
+    }
   }
 
   /**
    * Rebuild O(log N) RBush 2D spatial index for rapid range & density lookups on ground plane (x, z).
    */
   public rebuildSpatialIndex(): void {
+    this.spatialDirty = false;
     this.spatialTree.clear();
     const items: RBushItem[] = [];
 
@@ -121,6 +136,7 @@ export class HeatmapGenerator {
     maxX: number,
     maxZ: number
   ): RBushItem[] {
+    if (this.spatialDirty) this.rebuildSpatialIndex();
     return this.spatialTree.search({
       minX,
       minY: minZ,
@@ -166,27 +182,33 @@ export class HeatmapGenerator {
     this.instancedMesh.count = count;
 
     for (let i = 0; i < count; i++) {
-      const slot = i * 4;
-      const x = this.telemetryBuffer[slot];
-      const y = this.telemetryBuffer[slot + 1];
-      const z = this.telemetryBuffer[slot + 2];
-      const severity = this.telemetryBuffer[slot + 3];
-
-      // Matrix position
-      this.dummyMatrix.setPosition(x, y + 0.4, z);
-      this.instancedMesh.setMatrixAt(i, this.dummyMatrix);
-
-      // Color interpolation: Low severity = Glowing Amber (0xf59e0b), High severity = Red (0xef4444)
-      const amberColor = new THREE.Color(0xf59e0b);
-      const redColor = new THREE.Color(0xef4444);
-      this.dummyColor.copy(amberColor).lerp(redColor, severity);
-
-      this.instancedMesh.setColorAt(i, this.dummyColor);
+      this.writeInstance(i);
     }
 
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
-    if (this.instancedMesh.instanceColor) {
-      this.instancedMesh.instanceColor.needsUpdate = true;
+    this.meshNeedsFullSync = false;
+    this.markInstancesUpdated();
+  }
+
+  private writeInstance(i: number): void {
+    const slot = i * 4;
+    const x = this.telemetryBuffer[slot];
+    const y = this.telemetryBuffer[slot + 1];
+    const z = this.telemetryBuffer[slot + 2];
+    const severity = this.telemetryBuffer[slot + 3];
+
+    // Matrix position
+    this.dummyMatrix.setPosition(x, y + 0.4, z);
+    this.instancedMesh!.setMatrixAt(i, this.dummyMatrix);
+
+    // Color interpolation: Low severity = Glowing Amber (0xf59e0b), High severity = Red (0xef4444)
+    this.dummyColor.copy(AMBER_COLOR).lerp(RED_COLOR, severity);
+    this.instancedMesh!.setColorAt(i, this.dummyColor);
+  }
+
+  private markInstancesUpdated(): void {
+    this.instancedMesh!.instanceMatrix.needsUpdate = true;
+    if (this.instancedMesh!.instanceColor) {
+      this.instancedMesh!.instanceColor.needsUpdate = true;
     }
   }
 

@@ -37,6 +37,9 @@ export class VoxelWorld {
 
   public seed: number = 1337;
 
+  // >0 while a bulk edit is running; setBlock then leaves meshing to the caller.
+  private deferRebuild = 0;
+
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.atlas = createTextureAtlas();
@@ -103,11 +106,21 @@ export class VoxelWorld {
     if (lz === 0) { const c = this.chunks.get(`${cx},${cz-1}`); if (c) c.dirty = true; }
     if (lz === CHUNK_SIZE - 1) { const c = this.chunks.get(`${cx},${cz+1}`); if (c) c.dirty = true; }
 
-    this.rebuildWorld();
+    if (this.deferRebuild === 0) this.rebuildWorld();
     return true;
   }
 
   public generateTerrain(seed: number = 1337): void {
+    this.deferRebuild++;
+    try {
+      this.fillTerrain(seed);
+    } finally {
+      this.deferRebuild--;
+    }
+    this.rebuildWorld();
+  }
+
+  private fillTerrain(seed: number): void {
     for (let x = this.minX; x <= this.maxX; x++) {
       for (let z = this.minZ; z <= this.maxZ; z++) {
         const heightOffset = Math.floor(Math.sin((x + seed) * 0.3) * Math.cos((z + seed) * 0.3) * 1.5);
@@ -298,15 +311,23 @@ export class VoxelWorld {
   }
 
   public getVoxelState(): VoxelWorldState {
-    const counts: Record<string, number> = {};
+    // Tally by numeric type in the hot loop; names are resolved once per type afterwards.
+    const tally = new Uint32Array(256);
+    const firstSeen: number[] = [];
     for (const chunk of this.chunks.values()) {
-      for (let i = 0; i < chunk.blocks.length; i++) {
-        const t = chunk.blocks[i];
+      const blocks = chunk.blocks;
+      for (let i = 0; i < blocks.length; i++) {
+        const t = blocks[i];
         if (t !== BlockType.AIR) {
-          const name = BLOCK_DEFINITIONS[t as BlockType] ? BLOCK_DEFINITIONS[t as BlockType].name : 'Unknown';
-          counts[name] = (counts[name] || 0) + 1;
+          if (tally[t] === 0) firstSeen.push(t);
+          tally[t]++;
         }
       }
+    }
+    const counts: Record<string, number> = {};
+    for (const t of firstSeen) {
+      const name = BLOCK_DEFINITIONS[t as BlockType] ? BLOCK_DEFINITIONS[t as BlockType].name : 'Unknown';
+      counts[name] = (counts[name] || 0) + tally[t];
     }
     return {
       totalBlocks: Object.values(counts).reduce((a, b) => a + b, 0),
